@@ -1,0 +1,12 @@
+{
+  "name": "shiye-books",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1",
+    "marked": "^18.0.4"
+  }
+}
