@@ -1,9 +1,7 @@
 /**
  * Build script for shiye-books content API.
- * Scans data/ directory, generates JSON API + copies images.
- * Served via jsDelivr CDN (primary) and GitHub Pages (fallback).
- *
- * Logic extracted from vite-plugin-essays.js with image path adjustments.
+ * Scans data/ directory, generates JSON API.
+ * Images served directly from data/ via jsDelivr CDN — no duplication.
  */
 
 import fs from 'node:fs';
@@ -13,7 +11,7 @@ import { Marked } from 'marked';
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
-const SITE_BASE = process.env.SITE_BASE || 'https://cdn.jsdelivr.net/gh/UchihaArk/shiye-books@master/dist';
+const DATA_CDN = process.env.DATA_CDN || 'https://cdn.jsdelivr.net/gh/UchihaArk/shiye-books@master/data';
 
 // Custom marked instance with renderer overrides
 const md = new Marked();
@@ -53,9 +51,10 @@ function formatDate(dateStr) {
 
 /**
  * Resolve relative image paths to absolute CDN URLs.
+ * Points directly to data/ directory — no image duplication needed.
  */
 function resolveImagePaths(html, category, slug, chapterSlug) {
-  let base = `${SITE_BASE}/images/${category}/${slug}`;
+  let base = `${DATA_CDN}/${category}/${slug}`;
   if (chapterSlug) base += `/chapters/${chapterSlug}`;
   return html.replace(/src="\.?\/?(images\/)/g, `src="${base}/$1`);
 }
@@ -117,7 +116,7 @@ function buildEssay(articleDir, category, slug, withContent) {
     tags: meta.tags || [],
     time: meta.time || '',
     summary: meta.summary || '',
-    cover: meta.cover ? `${SITE_BASE}/images/${category}/${slug}/${meta.cover}` : '',
+    cover: meta.cover ? `${DATA_CDN}/${category}/${slug}/${meta.cover}` : '',
     chapters,
   };
 
@@ -176,22 +175,6 @@ function scanAllEssays(withContent) {
   return { essays, essayOrder, allTags: [...allTags].sort(), categories };
 }
 
-/**
- * Recursively copy image files from src to dest.
- */
-function copyDirRecursive(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDirRecursive(srcPath, destPath);
-    } else if (/\.(svg|jpg|jpeg|png|gif|webp)$/i.test(entry.name)) {
-      fs.copyFileSync(srcPath, destPath);
-    }
-  }
-}
-
 // ── Main build ──────────────────────────────────────────────
 
 console.log('Building content API...');
@@ -204,10 +187,9 @@ if (fs.existsSync(DIST_DIR)) {
 // 1. Generate index.json (metadata only, no content)
 const { essays, essayOrder, allTags, categories } = scanAllEssays(false);
 
-// Strip content field from essays for index
 const metaEssays = {};
 for (const [slug, essay] of Object.entries(essays)) {
-  metaEssays[slug] = essay; // already no content since withContent=false
+  metaEssays[slug] = essay;
 }
 
 const indexData = { essays: metaEssays, essayOrder, allTags, categories };
@@ -232,18 +214,5 @@ for (const slug of essayOrder) {
 }
 console.log(`  api/essay/*.json (${essayOrder.length} files)`);
 
-// 3. Copy images (data/ → dist/images/)
-const distImagesDir = path.join(DIST_DIR, 'images');
-const srcDataDir = DATA_DIR;
-if (fs.existsSync(srcDataDir)) {
-  const cats = fs.readdirSync(srcDataDir).filter((f) =>
-    fs.statSync(path.join(srcDataDir, f)).isDirectory()
-  );
-  for (const cat of cats) {
-    const catSrc = path.join(srcDataDir, cat);
-    copyDirRecursive(catSrc, path.join(distImagesDir, cat));
-  }
-}
-console.log(`  images/ (copied from data/)`);
-
+// No image copying — images served directly from data/ via CDN
 console.log('Build complete!');

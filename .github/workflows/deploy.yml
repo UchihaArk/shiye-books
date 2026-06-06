@@ -1,4 +1,4 @@
-name: Build & Deploy
+name: Build
 
 on:
   push:
@@ -9,11 +9,9 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: build
   cancel-in-progress: false
 
 jobs:
@@ -26,8 +24,6 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: node scripts/build.js
-
-      # Commit dist/ back to repo for jsDelivr CDN serving
       - name: Commit dist/
         run: |
           git config user.name "github-actions[bot]"
@@ -35,18 +31,3 @@ jobs:
           git add dist/
           git diff --cached --quiet || git commit -m "auto: update dist/ [skip ci]"
           git push
-
-      # Also deploy to GitHub Pages as fallback
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
