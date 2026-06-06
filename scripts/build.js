@@ -1,7 +1,7 @@
 /**
  * Build script for shiye-books content API.
  * Scans data/ directory, generates JSON API + copies images.
- * Deployed via GitHub Pages.
+ * Served via jsDelivr CDN (primary) and GitHub Pages (fallback).
  *
  * Logic extracted from vite-plugin-essays.js with image path adjustments.
  */
@@ -13,7 +13,7 @@ import { Marked } from 'marked';
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
-const SITE_BASE = process.env.SITE_BASE || 'https://uchihaark.github.io/shiye-books';
+const SITE_BASE = process.env.SITE_BASE || 'https://cdn.jsdelivr.net/gh/UchihaArk/shiye-books@master/dist';
 
 // Custom marked instance with renderer overrides
 const md = new Marked();
@@ -52,7 +52,7 @@ function formatDate(dateStr) {
 }
 
 /**
- * Resolve relative image paths to absolute URLs on GitHub Pages.
+ * Resolve relative image paths to absolute CDN URLs.
  */
 function resolveImagePaths(html, category, slug, chapterSlug) {
   let base = `${SITE_BASE}/images/${category}/${slug}`;
@@ -235,7 +235,6 @@ console.log(`  api/essay/*.json (${essayOrder.length} files)`);
 // 3. Copy images (data/ → dist/images/)
 const distImagesDir = path.join(DIST_DIR, 'images');
 const srcDataDir = DATA_DIR;
-// Copy data/ contents to dist/images/ (flattening the "data/" prefix)
 if (fs.existsSync(srcDataDir)) {
   const cats = fs.readdirSync(srcDataDir).filter((f) =>
     fs.statSync(path.join(srcDataDir, f)).isDirectory()
