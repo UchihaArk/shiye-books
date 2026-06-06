@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="620" height="380" viewBox="0 0 620 380">
-  <defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0d1b2a"/><stop offset="50%" stop-color="#1b2838"/><stop offset="100%" stop-color="#1b3a4b"/></linearGradient></defs>
-  <rect width="620" height="380" fill="url(#bg)"/>
-  <circle cx="217" cy="171" r="75" fill="none" stroke="rgba(0,180,216,0.18)" stroke-width="1.5"/>
-  <circle cx="403" cy="209" r="55" fill="none" stroke="rgba(0,180,216,0.13)" stroke-width="1.5"/>
-  <line x1="292" y1="171" x2="348" y2="209" stroke="rgba(0,180,216,0.18)" stroke-width="1"/>
-  <circle cx="93" cy="304" r="3" fill="rgba(0,180,216,0.3)"/><circle cx="217" cy="304" r="3" fill="rgba(0,180,216,0.3)"/><circle cx="341" cy="304" r="3" fill="rgba(0,180,216,0.3)"/><circle cx="465" cy="304" r="3" fill="rgba(0,180,216,0.3)"/>
-  <text x="310" y="190" text-anchor="middle" dominant-baseline="central" font-family="serif" font-size="28" fill="rgba(255,255,255,0.7)" font-weight="600">技术与人文</text>
-</svg>
