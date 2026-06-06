@@ -1,0 +1,142 @@
+{
+  "essays": {
+    "给苡澄的一封信": {
+      "id": "给苡澄的一封信",
+      "title": "给苡澄的一封信",
+      "category": "信件",
+      "author": "程佳琪",
+      "date": "2026年5月31日",
+      "tags": [
+        "信件",
+        "期待",
+        "爱"
+      ],
+      "time": "约 8 分钟",
+      "summary": "这是妈妈在30周卧床休息时写给你的信，记录了你如何在爱中到来，以及全家人对你最深的期待。",
+      "cover": "https://uchihaark.github.io/shiye-books/images/信件/给苡澄的一封信/images/cover.jpg",
+      "chapters": []
+    },
+    "清晨的第一杯咖啡": {
+      "id": "清晨的第一杯咖啡",
+      "title": "清晨的第一杯咖啡",
+      "category": "日常",
+      "author": "",
+      "date": "2026年5月28日",
+      "tags": [
+        "咖啡",
+        "生活"
+      ],
+      "time": "约 4 分钟",
+      "summary": "晨光穿过窗帘的缝隙，厨房里弥漫着咖啡豆被研磨时那种令人安心的焦香。",
+      "cover": "https://uchihaark.github.io/shiye-books/images/日常/清晨的第一杯咖啡/images/cover.svg",
+      "chapters": []
+    },
+    "读《百年孤独》": {
+      "id": "读《百年孤独》",
+      "title": "读《百年孤独》",
+      "category": "读书笔记",
+      "author": "Ark",
+      "date": "2026年5月20日",
+      "tags": [
+        "阅读",
+        "文学"
+      ],
+      "time": "约 6 分钟",
+      "summary": "多年以后，面对这篇读书笔记，我将会回想起第一次翻开《百年孤独》的那个遥远的下午。",
+      "cover": "https://uchihaark.github.io/shiye-books/images/读书笔记/读《百年孤独》/images/cover.svg",
+      "chapters": []
+    },
+    "关于AI的一些思考": {
+      "id": "关于AI的一些思考",
+      "title": "关于 AI 的一些思考",
+      "category": "随笔",
+      "author": "",
+      "date": "2026年5月31日",
+      "tags": [
+        "AI",
+        "思考"
+      ],
+      "time": "约 5 分钟",
+      "summary": "人工智能的蓬勃发展让我们不得不重新思考人与机器的边界在哪里，以及创造力究竟意味着什么。",
+      "cover": "https://uchihaark.github.io/shiye-books/images/随笔/关于AI的一些思考/images/cover.svg",
+      "chapters": []
+    },
+    "冬天的树": {
+      "id": "冬天的树",
+      "title": "冬天的树",
+      "category": "随笔",
+      "author": "",
+      "date": "2026年5月15日",
+      "tags": [
+        "自然",
+        "冬天"
+      ],
+      "time": "约 3 分钟",
+      "summary": "冬天的树是最好的建筑师。它们脱去了所有装饰，只剩下结构——而结构，才是最诚实的美。",
+      "cover": "https://uchihaark.github.io/shiye-books/images/随笔/冬天的树/images/cover.svg",
+      "chapters": []
+    },
+    "四季之思": {
+      "id": "四季之思",
+      "title": "四季之思",
+      "category": "随笔",
+      "author": "程佳琪",
+      "date": "2026年6月5日",
+      "tags": [
+        "随笔",
+        "自然",
+        "四季"
+      ],
+      "time": "约 12 分钟",
+      "summary": "春生夏长，秋收冬藏。四季轮回中，藏着生命的节律与哲思。",
+      "cover": "https://uchihaark.github.io/shiye-books/images/随笔/四季之思/images/cover.svg",
+      "chapters": [
+        {
+          "slug": "01-春",
+          "title": "春"
+        },
+        {
+          "slug": "02-夏",
+          "title": "夏"
+        },
+        {
+          "slug": "03-秋",
+          "title": "秋"
+        },
+        {
+          "slug": "04-冬",
+          "title": "冬"
+        }
+      ]
+    }
+  },
+  "essayOrder": [
+    "四季之思",
+    "给苡澄的一封信",
+    "关于AI的一些思考",
+    "清晨的第一杯咖啡",
+    "读《百年孤独》",
+    "冬天的树"
+  ],
+  "allTags": [
+    "AI",
+    "信件",
+    "冬天",
+    "咖啡",
+    "四季",
+    "思考",
+    "文学",
+    "期待",
+    "爱",
+    "生活",
+    "自然",
+    "阅读",
+    "随笔"
+  ],
+  "categories": [
+    "信件",
+    "日常",
+    "读书笔记",
+    "随笔"
+  ]
+}
