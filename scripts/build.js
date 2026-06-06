@@ -13,6 +13,7 @@ import { Marked } from 'marked';
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
+const SITE_BASE = process.env.SITE_BASE || 'https://uchihaark.github.io/shiye-books';
 
 // Custom marked instance with renderer overrides
 const md = new Marked();
@@ -51,11 +52,10 @@ function formatDate(dateStr) {
 }
 
 /**
- * Resolve relative image paths to absolute paths under GitHub Pages root.
- * Path pattern: /images/{category}/{slug}/images/...
+ * Resolve relative image paths to absolute URLs on GitHub Pages.
  */
 function resolveImagePaths(html, category, slug, chapterSlug) {
-  let base = `/images/${category}/${slug}`;
+  let base = `${SITE_BASE}/images/${category}/${slug}`;
   if (chapterSlug) base += `/chapters/${chapterSlug}`;
   return html.replace(/src="\.?\/?(images\/)/g, `src="${base}/$1`);
 }
@@ -117,7 +117,7 @@ function buildEssay(articleDir, category, slug, withContent) {
     tags: meta.tags || [],
     time: meta.time || '',
     summary: meta.summary || '',
-    cover: meta.cover ? `/images/${category}/${slug}/${meta.cover}` : '',
+    cover: meta.cover ? `${SITE_BASE}/images/${category}/${slug}/${meta.cover}` : '',
     chapters,
   };
 
