@@ -157,7 +157,8 @@ export default function App() {
   // On first mount, normalise the URL with replaceState (no extra history entry)
   useEffect(() => {
     if (currentView === 'reading' && currentEssay) {
-      window.history.replaceState(null, '', `/e/${encodeURIComponent(currentEssay)}`);
+      const hash = window.location.hash; // preserve chapter hash
+      window.history.replaceState(null, '', `/e/${encodeURIComponent(currentEssay)}${hash}`);
     } else {
       window.history.replaceState(null, '', '/');
     }

@@ -2,6 +2,7 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import { loadEssayContent } from '../lib/contentLoader';
 import { isUnlocked as checkUnlocked } from '../lib/secrets';
 import TOC from './TOC';
+import ImageLightbox from './ImageLightbox';
 
 const FONT_KEY = 'sy-font-level';
 const FONT_LEVELS = [
@@ -25,6 +26,9 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Image lightbox state
+  const [lightbox, setLightbox] = useState({ src: null, alt: null });
+
   const essay = essays[essayId];
   const hasChapters = essay && essay.chapters && essay.chapters.length > 0;
   const isLocked = essay?.locked && !checkUnlocked(essayId);
@@ -42,6 +46,16 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
         if (!cancelled) {
           setContentData(data);
           setLoading(false);
+          // Restore chapter from URL hash (e.g. #c-2 → second chapter)
+          const hash = window.location.hash;
+          const m = hash.match(/^#c-(\d+)$/);
+          if (m) {
+            const ci = parseInt(m[1], 10) - 1; // 1-based in URL → 0-based index
+            const total = (data.chapters || []).length;
+            if (total > 0 && ci >= 0 && ci < total) {
+              setChapterIdx(ci);
+            }
+          }
         }
       })
       .catch((err) => {
@@ -54,6 +68,20 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
     return () => { cancelled = true; };
   }, [essayId, isLocked]);
 
+  // Attach click-to-zoom on article images
+  useEffect(() => {
+    const el = articleRef.current;
+    if (!el || loading || error) return;
+
+    const handler = (e) => {
+      const img = e.target.closest('img');
+      if (!img) return;
+      setLightbox({ src: img.src, alt: img.alt || '' });
+    };
+    el.addEventListener('click', handler);
+    return () => el.removeEventListener('click', handler);
+  }, [contentData, loading, error]);
+
   // Scroll to top when essay changes
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -63,6 +91,22 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chapterIdx]);
+
+  // Listen for hashchange (browser back/forward with chapter hashes)
+  useEffect(() => {
+    const onHash = () => {
+      const m = window.location.hash.match(/^#c-(\d+)$/);
+      if (m) {
+        const ci = parseInt(m[1], 10) - 1; // 1-based in URL → 0-based index
+        const total = (contentData?.chapters || []).length;
+        if (total > 0 && ci >= 0 && ci < total && ci !== chapterIdx) {
+          setChapterIdx(ci);
+        }
+      }
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [contentData, chapterIdx]);
 
   // Scroll detection for sticky top bar
   useEffect(() => {
@@ -103,6 +147,12 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
   const handleChapterNav = useCallback(
     (newIdx) => {
       setChapterIdx(newIdx);
+      // Update URL hash without creating history entries (1-based)
+      if (newIdx > 0) {
+        window.history.replaceState(null, '', `#c-${newIdx + 1}`);
+      } else {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
     },
     []
   );
@@ -273,6 +323,12 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
             </div>
           </div>
 
+          {essay.cover && !isLocked && (
+            <div className="rdCover" onClick={() => setLightbox({ src: essay.cover, alt: essay.title })}>
+              <img src={essay.cover} alt={essay.title} />
+            </div>
+          )}
+
           {/* Locked content gate */}
           {isLocked ? (
             <div className="rdLocked">
@@ -334,6 +390,13 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
           )}
         </div>
       </div>
+      {lightbox.src && (
+        <ImageLightbox
+          src={lightbox.src}
+          alt={lightbox.alt}
+          onClose={() => setLightbox({ src: null, alt: null })}
+        />
+      )}
     </div>
   );
 }

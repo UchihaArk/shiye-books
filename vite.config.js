@@ -1,21 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { cpSync, createReadStream, existsSync, statSync } from 'fs'
+import { createReadStream, existsSync, statSync } from 'fs'
 import { resolve, extname } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    // Copy index.html → 404.html for SPA routing (Cloudflare Pages serves 404.html on unmatched paths)
-    {
-      name: 'spa-fallback',
-      closeBundle() {
-        try {
-          cpSync('dist/index.html', 'dist/404.html');
-        } catch {}
-      },
-    },
     // Dev mode: serve dist/api/ and data/ as static files
     {
       name: 'serve-local-data',

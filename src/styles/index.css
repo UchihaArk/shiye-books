@@ -1071,6 +1071,23 @@ body {
   opacity: 0.75;
 }
 
+/* ─── Cover image ─── */
+.rdCover {
+  margin-bottom: 28px;
+}
+.rdCover img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: zoom-in;
+}
+[data-theme='night'] .rdCover img {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
 /* Chapter indicator in top bar */
 .rdChLabel {
   font-family: var(--font-s);
@@ -1319,6 +1336,7 @@ body {
   margin: 1.8em auto;
   border-radius: 6px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: zoom-in;
 }
 [data-theme='night'] .article img {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -1330,6 +1348,76 @@ body {
   margin-top: -1.2em;
   margin-bottom: 1.8em;
   font-style: italic;
+}
+/* ─── Image Lightbox ─── */
+.imgLightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  animation: imgLightboxIn 0.25s ease;
+  touch-action: pinch-zoom;
+}
+@keyframes imgLightboxIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.imgLightboxClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.imgLightboxClose:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.imgLightboxClose svg {
+  width: 20px;
+  height: 20px;
+}
+.imgLightboxBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 92vw;
+  max-height: 90vh;
+  animation: imgLightboxScale 0.25s ease;
+}
+@keyframes imgLightboxScale {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.imgLightboxBody img {
+  max-width: 100%;
+  max-height: 82vh;
+  border-radius: 8px;
+  object-fit: contain;
+  cursor: zoom-out;
+}
+.imgLightboxCaption {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  font-style: italic;
+  max-width: 80vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .article pre {
   background: var(--bg-code);
