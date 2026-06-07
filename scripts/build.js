@@ -179,9 +179,10 @@ function scanAllEssays(withContent) {
 
 console.log('Building content API...');
 
-// Clean dist
-if (fs.existsSync(DIST_DIR)) {
-  fs.rmSync(DIST_DIR, { recursive: true });
+// Only clean dist/api/ — don't wipe entire dist/ (frontend build output may exist)
+const API_DIR = path.join(DIST_DIR, 'api');
+if (fs.existsSync(API_DIR)) {
+  fs.rmSync(API_DIR, { recursive: true });
 }
 
 // 1. Generate index.json (metadata only, no content)

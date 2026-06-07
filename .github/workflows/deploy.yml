@@ -1,5 +1,5 @@
 name: Build
-  
+
 on:
   push:
     branches: [master]
@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      # 1. 前端构建 → dist/（会先清空 dist）
+      - run: npx vite build
+      # 2. 内容构建 → dist/api/（只写 api 目录，不清空 dist）
       - run: node scripts/build.js
       - name: Commit dist/
         run: |
