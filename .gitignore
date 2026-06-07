@@ -21,4 +21,3 @@ npm-debug.log*
 
 # Secret plaintext (hashed version is auto-generated)
 secrets.local.yaml
-src/lib/secrets-hash.js
