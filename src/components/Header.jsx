@@ -54,7 +54,7 @@ export default function Header({
         <div className="logo" onClick={onReset}>
           <svg className="logoIcon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <path d="M8 25C11 19 15 11 20 6c1 3 1.5 7.5.5 13-3.5-1-8 0-12.5 6z" style={{ fill: 'var(--ac)' }} opacity=".85"/>
-            <path d="M20 6c2.5-1.5 5.5-.5 7 2" stroke="var(--ac)" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".6"/>
+            <path d="M20 6c2.5-1.5 5.5-.5 7 2" stroke="var(--ac)" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity=".6"/>
           </svg>
           拾<em>页</em>
         </div>

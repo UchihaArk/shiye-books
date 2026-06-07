@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/build.js && vite",
     "build:content": "node scripts/build.js",
     "build:frontend": "vite build",
     "build": "npm run build:frontend && npm run build:content",

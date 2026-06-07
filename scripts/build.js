@@ -1,7 +1,7 @@
 /**
  * Build script for shiye-books content API.
- * Scans data/ directory, generates JSON API.
- * Images served directly from data/ via jsDelivr CDN — no duplication.
+ * Scans data/ directory, generates JSON API + copies images to dist/.
+ * Runs as part of Cloudflare Pages build (npm run build).
  */
 
 import fs from 'node:fs';
@@ -11,7 +11,7 @@ import { Marked } from 'marked';
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
-const DATA_CDN = process.env.DATA_CDN || 'https://cdn.jsdelivr.net/gh/UchihaArk/shiye-books@master/data';
+const DATA_CDN = process.env.DATA_CDN || '/data';
 
 // Custom marked instance with renderer overrides
 const md = new Marked();
@@ -51,7 +51,7 @@ function formatDate(dateStr) {
 
 /**
  * Resolve relative image paths to absolute CDN URLs.
- * Points directly to data/ directory — no image duplication needed.
+ * Points directly to data/ directory on Cloudflare Pages.
  */
 function resolveImagePaths(html, category, slug, chapterSlug) {
   let base = `${DATA_CDN}/${category}/${slug}`;
@@ -215,5 +215,40 @@ for (const slug of essayOrder) {
 }
 console.log(`  api/essay/*.json (${essayOrder.length} files)`);
 
-// No image copying — images served directly from data/ via CDN
+// 3. Copy images from data/ → dist/data/ so Cloudflare Pages serves them directly
+function copyImages() {
+  if (!fs.existsSync(DATA_DIR)) return;
+  const categories = fs.readdirSync(DATA_DIR).filter((f) => fs.statSync(path.join(DATA_DIR, f)).isDirectory());
+  let count = 0;
+  for (const category of categories) {
+    const catDir = path.join(DATA_DIR, category);
+    const slugs = fs.readdirSync(catDir).filter((f) => fs.statSync(path.join(catDir, f)).isDirectory());
+    for (const slug of slugs) {
+      const articleDir = path.join(catDir, slug);
+      // Article images
+      const imagesDir = path.join(articleDir, 'images');
+      if (fs.existsSync(imagesDir)) {
+        const dest = path.join(DIST_DIR, 'data', category, slug, 'images');
+        fs.cpSync(imagesDir, dest, { recursive: true });
+        count++;
+      }
+      // Chapter images
+      const chaptersDir = path.join(articleDir, 'chapters');
+      if (fs.existsSync(chaptersDir)) {
+        const chapters = fs.readdirSync(chaptersDir).filter((f) => fs.statSync(path.join(chaptersDir, f)).isDirectory());
+        for (const ch of chapters) {
+          const chImages = path.join(chaptersDir, ch, 'images');
+          if (fs.existsSync(chImages)) {
+            const dest = path.join(DIST_DIR, 'data', category, slug, 'chapters', ch, 'images');
+            fs.cpSync(chImages, dest, { recursive: true });
+            count++;
+          }
+        }
+      }
+    }
+  }
+  console.log(`  images copied (${count} directories)`);
+}
+copyImages();
+
 console.log('Build complete!');
