@@ -252,4 +252,13 @@ function copyImages() {
 }
 copyImages();
 
+// 4. Copy root verification files (e.g. WeChat domain verification) to dist/
+const VERIFY_PATTERN = /^[0-9a-f]{32}\.txt$/;
+for (const f of fs.readdirSync(process.cwd())) {
+  if (VERIFY_PATTERN.test(f)) {
+    fs.copyFileSync(f, path.join(DIST_DIR, f));
+    console.log(`  copied ${f} → dist/`);
+  }
+}
+
 console.log('Build complete!');
