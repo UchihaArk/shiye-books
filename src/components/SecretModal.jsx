@@ -12,6 +12,7 @@ export default function SecretModal({ title, onVerify, onSuccess, onClose }) {
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [shake, setShake] = useState(false);
+  const [composing, setComposing] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function SecretModal({ title, onVerify, onSuccess, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim() || verifying) return;
+    if (composing || !input.trim() || verifying) return;
 
     setVerifying(true);
     setError('');
@@ -57,10 +58,12 @@ export default function SecretModal({ title, onVerify, onSuccess, onClose }) {
           <input
             ref={inputRef}
             className="secretInput"
-            type="password"
+            type="text"
             placeholder="请输入暗号"
             value={input}
             onChange={(e) => { setInput(e.target.value); setError(''); }}
+            onCompositionStart={() => setComposing(true)}
+            onCompositionEnd={() => setComposing(false)}
             autoComplete="off"
           />
           {error && <div className="secretError">{error}</div>}
