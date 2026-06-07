@@ -1,0 +1,2 @@
+name = "shiye-books"
+pages_build_output_dir = "./dist"
