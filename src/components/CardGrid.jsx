@@ -58,6 +58,7 @@ export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked
               <div className="cardLockOverlay">
                 <span className="cardLockIcon">🔒</span>
                 <span className="cardLockText">输入暗号解锁</span>
+                <span className="cardLockNote">仅为作者私密文章，平台不设付费门槛</span>
               </div>
             )}
           </div>
