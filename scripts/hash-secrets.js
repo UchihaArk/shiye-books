@@ -12,11 +12,14 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const SECRETS_FILE = path.join(ROOT, 'secrets.local.yaml');
 const OUTPUT_FILE = path.join(ROOT, 'src', 'lib', 'secrets-hash.js');
 
-// 如果 secrets.local.yaml 不存在，生成空映射
+// 如果 secrets.local.yaml 不存在，保留已有的哈希文件（远端构建场景）
 if (!fs.existsSync(SECRETS_FILE)) {
-  const empty = '// No secrets.local.yaml found — no locked articles.\nexport default {};\n';
-  fs.writeFileSync(OUTPUT_FILE, empty, 'utf-8');
-  console.log('secrets-hash.js: no secrets.local.yaml, generated empty map.');
+  if (fs.existsSync(OUTPUT_FILE)) {
+    console.log('secrets-hash.js: no secrets.local.yaml, keeping existing hash file.');
+  } else {
+    fs.writeFileSync(OUTPUT_FILE, 'export default {};\n', 'utf-8');
+    console.log('secrets-hash.js: no secrets.local.yaml and no hash file, generated empty map.');
+  }
   process.exit(0);
 }
 
