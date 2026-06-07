@@ -2115,8 +2115,9 @@ body.immersive .immBar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 8px;
+  padding-bottom: 32px;
   z-index: 2;
   border-radius: var(--r);
   background: rgba(0, 0, 0, 0.08);
