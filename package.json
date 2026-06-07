@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/build.js && vite",
+    "build:secrets": "node scripts/hash-secrets.js",
+    "dev": "npm run build:secrets && node scripts/build.js && vite",
     "build:content": "node scripts/build.js",
-    "build:frontend": "vite build",
+    "build:frontend": "npm run build:secrets && vite build",
     "build": "npm run build:frontend && npm run build:content",
     "preview": "vite preview",
     "lint": "eslint ."

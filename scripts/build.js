@@ -118,6 +118,7 @@ function buildEssay(articleDir, category, slug, withContent) {
     summary: meta.summary || '',
     cover: meta.cover ? `${DATA_CDN}/${category}/${slug}/${meta.cover}` : '',
     chapters,
+    locked: !!meta.locked,
   };
 
   if (withContent) {

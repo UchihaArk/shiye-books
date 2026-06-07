@@ -1,5 +1,6 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { loadEssayContent } from '../lib/contentLoader';
+import { isUnlocked as checkUnlocked } from '../lib/secrets';
 import TOC from './TOC';
 
 const FONT_KEY = 'sy-font-level';
@@ -9,7 +10,7 @@ const FONT_LEVELS = [
   { label: 'A', cls: 'font-lg', title: '大' },
 ];
 
-export default function ReadingView({ essayId, onBack, onToggleImmersive, essays, essayOrder }) {
+export default function ReadingView({ essayId, onBack, onToggleImmersive, essays, essayOrder, onUnlock }) {
   const articleRef = useRef(null);
   const topRef = useRef(null);
   const [topScrolled, setTopScrolled] = useState(false);
@@ -26,10 +27,11 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
 
   const essay = essays[essayId];
   const hasChapters = essay && essay.chapters && essay.chapters.length > 0;
+  const isLocked = essay?.locked && !checkUnlocked(essayId);
 
   // Load content when essay changes
   useEffect(() => {
-    if (!essayId) return;
+    if (!essayId || isLocked) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -50,7 +52,7 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
       });
 
     return () => { cancelled = true; };
-  }, [essayId]);
+  }, [essayId, isLocked]);
 
   // Scroll to top when essay changes
   useEffect(() => {
@@ -212,7 +214,7 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
 
   return (
     <div className="reading vis">
-      {!loading && !error && (
+      {!isLocked && !loading && !error && (
         <TOC contentRef={articleRef} essayId={essayId} />
       )}
       <div className="readingWrap">
@@ -271,49 +273,63 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
             </div>
           </div>
 
-          {/* Chapter navigation bar */}
-          {hasChapters && chapterList.length > 0 && (
-            <div className="rdChapterBar">
-              <span className="rdChapterTitle">
-                {chapterList[chapterIdx]?.title || ''}
-              </span>
-              <div className="rdChapterPills">
-                {buildChapterPills().map((item, i) =>
-                  item.type === 'dots' ? (
-                    <span key={`d${i}`} className="rdChDots">…</span>
-                  ) : (
-                    <button
-                      key={item.idx}
-                      className={`rdChPill${item.idx === chapterIdx ? ' active' : ''}`}
-                      onClick={() => handleChapterNav(item.idx)}
-                    >
-                      {item.idx + 1}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Content area */}
-          {loading ? (
-            <div className="rdLoading">
-              <div className="rdLoadingSpinner" />
-              <span>正在加载…</span>
-            </div>
-          ) : error ? (
-            <div className="rdError">
-              <span>加载失败：{error}</span>
-              <button onClick={() => window.location.reload()}>重试</button>
+          {/* Locked content gate */}
+          {isLocked ? (
+            <div className="rdLocked">
+              <span className="rdLockedIcon">🔒</span>
+              <h3 className="rdLockedTitle">这篇文章需要暗号解锁</h3>
+              <p className="rdLockedHint">输入正确的暗号才能阅读全文</p>
+              <button className="rdLockedBtn" onClick={() => onUnlock?.(essayId)}>
+                输入暗号
+              </button>
             </div>
           ) : (
             <>
-              <div
-                ref={articleRef}
-                className={`article ${FONT_LEVELS[fontLevel].cls}`}
-                dangerouslySetInnerHTML={{ __html: displayContent }}
-              />
-              {renderNav()}
+              {/* Chapter navigation bar */}
+              {hasChapters && chapterList.length > 0 && (
+                <div className="rdChapterBar">
+                  <span className="rdChapterTitle">
+                    {chapterList[chapterIdx]?.title || ''}
+                  </span>
+                  <div className="rdChapterPills">
+                    {buildChapterPills().map((item, i) =>
+                      item.type === 'dots' ? (
+                        <span key={`d${i}`} className="rdChDots">…</span>
+                      ) : (
+                        <button
+                          key={item.idx}
+                          className={`rdChPill${item.idx === chapterIdx ? ' active' : ''}`}
+                          onClick={() => handleChapterNav(item.idx)}
+                        >
+                          {item.idx + 1}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Content area */}
+              {loading ? (
+                <div className="rdLoading">
+                  <div className="rdLoadingSpinner" />
+                  <span>正在加载…</span>
+                </div>
+              ) : error ? (
+                <div className="rdError">
+                  <span>加载失败：{error}</span>
+                  <button onClick={() => window.location.reload()}>重试</button>
+                </div>
+              ) : (
+                <>
+                  <div
+                    ref={articleRef}
+                    className={`article ${FONT_LEVELS[fontLevel].cls}`}
+                    dangerouslySetInnerHTML={{ __html: displayContent }}
+                  />
+                  {renderNav()}
+                </>
+              )}
             </>
           )}
         </div>

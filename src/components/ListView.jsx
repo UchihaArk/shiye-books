@@ -10,6 +10,8 @@ export default function ListView({
   activeTags,
   onRemoveTag,
   onTagClick,
+  isUnlocked,
+  onLockedClick,
 }) {
   return (
     <div className="listView">
@@ -44,7 +46,13 @@ export default function ListView({
           </div>
         )}
       </div>
-      <CardGrid essays={essays} onSelectEssay={onSelectEssay} onTagClick={onTagClick} />
+      <CardGrid
+        essays={essays}
+        onSelectEssay={onSelectEssay}
+        onTagClick={onTagClick}
+        isUnlocked={isUnlocked}
+        onLockedClick={onLockedClick}
+      />
     </div>
   );
 }

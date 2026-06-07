@@ -8,7 +8,9 @@ import ReadingView from './components/ReadingView';
 import ProgressBar from './components/ProgressBar';
 import BackToTop from './components/BackToTop';
 import ImmersiveBar from './components/ImmersiveBar';
+import SecretModal from './components/SecretModal';
 import { loadIndex, clearIndexCache } from './lib/api';
+import { verifySecret, isUnlocked as checkUnlocked, markUnlocked } from './lib/secrets';
 
 function isMobile() {
   return window.innerWidth <= 768;
@@ -57,6 +59,9 @@ export default function App() {
   const [immersive, setImmersive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showBackTop, setShowBackTop] = useState(false);
+
+  // Secret unlock state
+  const [unlockTarget, setUnlockTarget] = useState(null);
 
   // Flag: when true, navigation is triggered by popstate — skip pushState
   const popstateRef = useRef(false);
@@ -108,6 +113,7 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
+        if (unlockTarget) { setUnlockTarget(null); return; }
         if (immersive) { setImmersive(false); return; }
         if (currentView === 'reading') { showList(); closeSidebarMobile(); return; }
         setSearchQuery('');
@@ -119,7 +125,7 @@ export default function App() {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [immersive, currentView]);
+  }, [immersive, currentView, unlockTarget]);
 
   // Listen for open-essay events from navigation buttons
   useEffect(() => {
@@ -259,6 +265,36 @@ export default function App() {
       });
   }, []);
 
+  // --- Locked essay handling ---
+  const handleSelectEssay = useCallback((id) => {
+    const essay = essays[id];
+    if (essay?.locked && !checkUnlocked(id)) {
+      setUnlockTarget(id);
+      return;
+    }
+    openEssay(id);
+  }, [essays, openEssay]);
+
+  const handleLockedClick = useCallback((id) => {
+    setUnlockTarget(id);
+  }, []);
+
+  const handleSecretVerify = useCallback(async (input) => {
+    return verifySecret(unlockTarget, input);
+  }, [unlockTarget]);
+
+  const handleSecretSuccess = useCallback(() => {
+    if (unlockTarget) {
+      markUnlocked(unlockTarget);
+      openEssay(unlockTarget);
+      setUnlockTarget(null);
+    }
+  }, [unlockTarget, openEssay]);
+
+  const handleSecretClose = useCallback(() => {
+    setUnlockTarget(null);
+  }, []);
+
   // --- Filtered essays ---
   const filteredEssays = useMemo(() => {
     let list = essayOrder.map((id) => essays[id]).filter(Boolean);
@@ -344,10 +380,12 @@ export default function App() {
               showClear={headerInfo.showClear}
               onClear={handleReset}
               essays={filteredEssays}
-              onSelectEssay={openEssay}
+              onSelectEssay={handleSelectEssay}
               activeTags={activeTags}
               onRemoveTag={handleRemoveTag}
               onTagClick={handleToggleTag}
+              isUnlocked={checkUnlocked}
+              onLockedClick={handleLockedClick}
             />
           ) : (
             <ReadingView
@@ -356,10 +394,20 @@ export default function App() {
               onToggleImmersive={() => setImmersive((m) => !m)}
               essays={essays}
               essayOrder={essayOrder}
+              onUnlock={handleLockedClick}
             />
           )}
         </main>
       </div>
+
+      {unlockTarget && essays[unlockTarget] && (
+        <SecretModal
+          title={essays[unlockTarget].title}
+          onVerify={handleSecretVerify}
+          onSuccess={handleSecretSuccess}
+          onClose={handleSecretClose}
+        />
+      )}
     </>
   );
 }

@@ -2099,3 +2099,197 @@ body.immersive .immBar {
   text-align: center;
   grid-column: 1 / -1;
 }
+
+/* ─── LOCKED CARD ─── */
+.cardLocked {
+  position: relative;
+}
+.cardLocked .cardBody {
+  filter: blur(2px);
+  opacity: 0.45;
+  transition: opacity 0.3s, filter 0.3s;
+}
+.cardLockOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 2;
+  border-radius: var(--r);
+  background: rgba(0, 0, 0, 0.08);
+}
+.cardLockIcon {
+  font-size: 2rem;
+  line-height: 1;
+  filter: grayscale(0.2);
+}
+.cardLockText {
+  font-family: var(--font-s);
+  font-size: 0.8rem;
+  color: var(--tx3);
+  background: var(--bg-card);
+  padding: 3px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--bd2);
+}
+.cardLocked:hover .cardLockOverlay {
+  background: rgba(0, 0, 0, 0.03);
+}
+.cardLocked:hover .cardLockIcon {
+  transform: scale(1.1);
+  transition: transform 0.2s;
+}
+.cardLocked .cardRead {
+  opacity: 0.6 !important;
+  transform: translateX(0) !important;
+  color: var(--tx3);
+}
+
+/* ─── SECRET MODAL ─── */
+.secretOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fadeIn 0.2s ease;
+}
+.secretCard {
+  background: var(--bg-card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 36px 32px 28px;
+  width: 340px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  animation: fadeUp 0.3s ease;
+}
+.secretCard.shake {
+  animation: shake 0.4s ease;
+}
+.secretIcon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.secretTitle {
+  font-family: var(--font);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--tx);
+  margin: 0 0 6px;
+}
+.secretHint {
+  font-family: var(--font-s);
+  font-size: 0.8125rem;
+  color: var(--tx3);
+  margin: 0 0 20px;
+}
+.secretInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  font-size: 0.9375rem;
+  font-family: var(--font-s);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--tx);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.secretInput:focus {
+  border-color: var(--ac);
+}
+.secretInput::placeholder {
+  color: var(--tx4);
+}
+.secretError {
+  font-family: var(--font-s);
+  font-size: 0.8rem;
+  color: #c0392b;
+  margin-top: 8px;
+}
+.secretBtn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 0;
+  font-size: 0.9375rem;
+  font-family: var(--font-s);
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  background: var(--ac);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.secretBtn:hover:not(:disabled) {
+  background: var(--ac-h);
+}
+.secretBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px); }
+  30% { transform: translateX(8px); }
+  45% { transform: translateX(-6px); }
+  60% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+  90% { transform: translateX(3px); }
+}
+
+/* ─── READING LOCKED GATE ─── */
+.rdLocked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  margin-top: 30px;
+}
+.rdLockedIcon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.rdLockedTitle {
+  font-family: var(--font);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--tx);
+  margin: 0 0 8px;
+}
+.rdLockedHint {
+  font-family: var(--font-s);
+  font-size: 0.875rem;
+  color: var(--tx3);
+  margin: 0 0 24px;
+}
+.rdLockedBtn {
+  font-family: var(--font-s);
+  font-size: 0.875rem;
+  padding: 10px 28px;
+  border-radius: 20px;
+  border: 1px solid var(--ac);
+  background: var(--ac-bg);
+  color: var(--ac);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.rdLockedBtn:hover {
+  background: var(--ac);
+  color: #fff;
+}
