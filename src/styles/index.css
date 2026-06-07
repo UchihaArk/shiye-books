@@ -591,6 +591,32 @@ body {
   transition: padding var(--t);
 }
 
+/* ─── ANNOUNCEMENT ─── */
+.announcement {
+  max-width: 880px;
+  margin: 0 auto 20px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-s);
+  font-size: 0.8125rem;
+  color: var(--tx3);
+  background: var(--bg-s);
+  border: 1px solid var(--bd2);
+  border-radius: var(--r);
+  line-height: 1.5;
+  animation: fadeIn 0.35s ease;
+}
+.announcementIcon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+.announcementText {
+  flex: 1;
+}
+
 /* ─── LIST ─── */
 .listView {
   max-width: 880px;

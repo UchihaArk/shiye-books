@@ -373,6 +373,14 @@ export default function App() {
           reading={currentView === 'reading'}
         />
         <main className="main">
+          {currentView === 'list' && (
+            <div className="announcement">
+              <span className="announcementIcon">💡</span>
+              <span className="announcementText">
+                锁定内容为作者个人私密文章，仅作隐私保护，本平台不设任何付费门槛。
+              </span>
+            </div>
+          )}
           {currentView === 'list' ? (
             <ListView
               title={headerInfo.title}
