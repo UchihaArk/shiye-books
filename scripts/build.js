@@ -24,7 +24,10 @@ md.use({
       const alt = text || '';
       const hasCaption = alt.startsWith('图：') || alt.startsWith('图:');
       // Wrap in figure with min-height placeholder to prevent CLS (layout shift)
-      const img = `<img src="${href}" alt="${alt}" loading="lazy" decoding="async">`;
+      // NOTE: Do NOT use loading="lazy" — it causes images to disappear during
+      // fast scrolling on mobile (iOS Safari/WebView pauses lazy image decode).
+      // Instead, use eager loading + IntersectionObserver in the client component.
+      const img = `<img src="${href}" alt="${alt}" decoding="async" loading="eager">`;
       if (hasCaption) {
         return `<figure class="illust">${img}<figcaption>${alt}</figcaption></figure>`;
       }

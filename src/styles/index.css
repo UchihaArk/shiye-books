@@ -1340,6 +1340,11 @@ body {
   cursor: zoom-in;
   min-height: 180px;
   background: var(--bg2, #f5f5f5);
+  /* Promote to GPU layer — prevents iOS Safari from discarding decoded
+     image pixels during inertial scrolling (causes blank flicker) */
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 [data-theme='night'] .article img {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
