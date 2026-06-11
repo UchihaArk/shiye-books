@@ -22,11 +22,13 @@ md.use({
     },
     image({ href, title, text }) {
       const alt = text || '';
-      let out = `<img src="${href}" alt="${alt}">`;
-      if (alt.startsWith('图：') || alt.startsWith('图:')) {
-        out += `\n<figcaption>${alt}</figcaption>`;
+      const hasCaption = alt.startsWith('图：') || alt.startsWith('图:');
+      // Wrap in figure with min-height placeholder to prevent CLS (layout shift)
+      const img = `<img src="${href}" alt="${alt}" loading="lazy" decoding="async">`;
+      if (hasCaption) {
+        return `<figure class="illust">${img}<figcaption>${alt}</figcaption></figure>`;
       }
-      return out;
+      return img;
     },
   },
 });

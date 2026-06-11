@@ -1330,6 +1330,7 @@ body {
 .article .divider::before {
   content: var(--div);
 }
+/* ─── Article images (anti-CLS: min-height placeholder) ─── */
 .article img {
   display: block;
   max-width: 100%;
@@ -1337,15 +1338,33 @@ body {
   border-radius: 6px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   cursor: zoom-in;
+  min-height: 180px;
+  background: var(--bg2, #f5f5f5);
 }
 [data-theme='night'] .article img {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: var(--bg2, #2a2a2a);
+}
+/* Illustration figure wrapper (from markdown ![图：...]) */
+.article figure.illust {
+  margin: 1.8em 0;
+  padding: 0;
+}
+.article figure.illust img {
+  margin: 0 auto;
+  min-height: 220px;
+  background: var(--bg2, #f5f5f5);
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+[data-theme='night'] .article figure.illust img {
+  background: var(--bg2, #2a2a2a);
 }
 .article figcaption {
   text-align: center;
   font-size: 0.8125rem;
   color: var(--tx3);
-  margin-top: -1.2em;
+  margin-top: 0.5em;
   margin-bottom: 1.8em;
   font-style: italic;
 }
