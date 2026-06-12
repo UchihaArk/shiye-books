@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 
-export default function TOC({ contentRef, essayId }) {
+export default function TOC({ contentRef, essayId, chapterIdx }) {
   const [headings, setHeadings] = useState([]);
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export default function TOC({ contentRef, essayId }) {
       setHeadings(items);
     });
     return () => cancelAnimationFrame(raf);
-  }, [contentRef, essayId]);
+  }, [contentRef, essayId, chapterIdx]);
 
   const handleClick = useCallback((id) => {
     const el = document.getElementById(id);

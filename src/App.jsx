@@ -169,6 +169,7 @@ export default function App() {
     setCurrentView('list');
     setCurrentEssay(null);
     setProgress(0);
+    window.scrollTo(0, 0);
     if (immersive) setImmersive(false);
     if (!popstateRef.current) {
       window.history.pushState(null, '', '/');
@@ -374,7 +375,7 @@ export default function App() {
           reading={currentView === 'reading'}
         />
         <main className="main">
-          {currentView === 'list' ? (
+          <div className={currentView === 'list' ? '' : 'listViewHidden'}>
             <ListView
               title={headerInfo.title}
               subtitle={headerInfo.subtitle}
@@ -388,7 +389,8 @@ export default function App() {
               isUnlocked={checkUnlocked}
               onLockedClick={handleLockedClick}
             />
-          ) : (
+          </div>
+          {currentView === 'reading' && currentEssay && (
             <ReadingView
               essayId={currentEssay}
               onBack={showList}

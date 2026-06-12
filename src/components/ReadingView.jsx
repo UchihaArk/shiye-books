@@ -265,7 +265,7 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
   return (
     <div className="reading vis">
       {!isLocked && !loading && !error && (
-        <TOC contentRef={articleRef} essayId={essayId} />
+        <TOC contentRef={articleRef} essayId={essayId} chapterIdx={chapterIdx} />
       )}
       <div className="readingWrap">
         <div className="readingInner">

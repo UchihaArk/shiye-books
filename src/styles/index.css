@@ -878,7 +878,7 @@ body {
   transition: box-shadow 0.2s;
 }
 .rdTop.scrolled {
-  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  /* No border/shadow — keep visually seamless with background */
 }
 .rdBack {
   display: inline-flex;
@@ -2416,4 +2416,12 @@ body.immersive .immBar {
 .rdLockedBtn:hover {
   background: var(--ac);
   color: #fff;
+}
+
+/* Keep list in render tree (no animation replay / no image reload) */
+.listViewHidden {
+  visibility: hidden;
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
 }
