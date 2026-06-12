@@ -110,6 +110,18 @@ body {
   transition: background var(--t), color var(--t);
   overflow-x: hidden;
   min-height: 100vh;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bd) transparent;
+}
+body::-webkit-scrollbar {
+  width: 8px;
+}
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+body::-webkit-scrollbar-thumb {
+  background: var(--bd);
+  border-radius: 4px;
 }
 
 /* Paper — oriental */
@@ -842,11 +854,32 @@ body {
 .reading {
   display: none;
   max-width: 100%;
-  animation: fadeIn 0.4s ease;
 }
 .reading.vis {
+  position: fixed;
+  top: var(--hdr-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 95;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  background: var(--bg);
   display: flex;
+  align-items: flex-start;
   justify-content: center;
+  scrollbar-width: auto;
+  scrollbar-color: var(--bd) transparent;
+}
+.reading.vis::-webkit-scrollbar {
+  width: 8px;
+}
+.reading.vis::-webkit-scrollbar-track {
+  background: transparent;
+}
+.reading.vis::-webkit-scrollbar-thumb {
+  background: var(--bd);
+  border-radius: 3px;
 }
 .reading.vis:has(.toc) {
   padding-right: var(--toc-w);
@@ -876,6 +909,9 @@ body {
   padding: 8px 0;
   margin-top: -8px;
   transition: box-shadow 0.2s;
+}
+.reading.vis .rdTop {
+  top: 0;
 }
 .rdTop.scrolled {
   /* No border/shadow — keep visually seamless with background */
@@ -1491,6 +1527,10 @@ body {
   top: calc(var(--hdr-h) + 28px);
   height: fit-content;
   max-height: calc(100vh - var(--hdr-h) - 80px);
+}
+.reading.vis .toc {
+  top: 28px;
+  max-height: calc(100vh - 80px);
   overflow-y: auto;
   opacity: 0;
   animation: fadeIn 0.5s 0.3s ease forwards;
@@ -1628,6 +1668,7 @@ body.immersive .backTop {
   pointer-events: none;
 }
 body.immersive .reading.vis {
+  top: 0;
   padding-right: 0;
 }
 body.immersive .progressBar {
@@ -1660,11 +1701,7 @@ body.immersive .sidebarOverlay {
   top: 12px;
   left: 50%;
   transform: translateX(-50%) translateY(-60px);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--bg-card);
+  z-index: 96;  background: var(--bg-card);
   padding: 6px 14px;
   border-radius: 24px;
   border: 1px solid var(--bd2);
@@ -2416,12 +2453,4 @@ body.immersive .immBar {
 .rdLockedBtn:hover {
   background: var(--ac);
   color: #fff;
-}
-
-/* Keep list in render tree (no animation replay / no image reload) */
-.listViewHidden {
-  visibility: hidden;
-  position: fixed;
-  pointer-events: none;
-  z-index: -1;
 }

@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
 
-export default function BackToTop({ visible }) {
+export default function BackToTop({ visible, scrollContainer }) {
   const handleClick = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    const target = scrollContainer?.current || window;
+    target.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [scrollContainer]);
 
   return (
     <button

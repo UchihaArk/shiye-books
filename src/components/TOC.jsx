@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 
-export default function TOC({ contentRef, essayId, chapterIdx }) {
+export default function TOC({ contentRef, essayId, chapterIdx, scrollContainerRef }) {
   const [headings, setHeadings] = useState([]);
 
   useEffect(() => {
@@ -20,12 +20,16 @@ export default function TOC({ contentRef, essayId, chapterIdx }) {
 
   const handleClick = useCallback((id) => {
     const el = document.getElementById(id);
-    if (el) {
+    const container = scrollContainerRef?.current;
+    if (el && container) {
       const headerOffset = 80;
-      const top = el.getBoundingClientRect().top + window.scrollY - headerOffset;
-      window.scrollTo({ top, behavior: 'smooth' });
+      const top = el.getBoundingClientRect().top
+        - container.getBoundingClientRect().top
+        + container.scrollTop
+        - headerOffset;
+      container.scrollTo({ top, behavior: 'smooth' });
     }
-  }, []);
+  }, [scrollContainerRef]);
 
   if (!headings.length) return null;
 

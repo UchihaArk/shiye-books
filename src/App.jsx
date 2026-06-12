@@ -5,7 +5,6 @@ import Sidebar from './components/Sidebar';
 import SidebarOverlay from './components/SidebarOverlay';
 import ListView from './components/ListView';
 import ReadingView from './components/ReadingView';
-import ProgressBar from './components/ProgressBar';
 import BackToTop from './components/BackToTop';
 import ImmersiveBar from './components/ImmersiveBar';
 import SecretModal from './components/SecretModal';
@@ -57,7 +56,6 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(() => !isMobile());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [immersive, setImmersive] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [showBackTop, setShowBackTop] = useState(false);
 
   // Secret unlock state
@@ -97,17 +95,16 @@ export default function App() {
     return () => document.body.classList.remove('immersive');
   }, [immersive]);
 
-  // Scroll listener
+  // Scroll listener (list mode only)
   useEffect(() => {
     const handleScroll = () => {
+      if (currentView !== 'list') return;
       const st = window.scrollY;
-      const dh = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
       setShowBackTop(st > 400);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [currentView]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -145,7 +142,6 @@ export default function App() {
       } else {
         setCurrentView('list');
         setCurrentEssay(null);
-        setProgress(0);
       }
       if (immersive) setImmersive(false);
       requestAnimationFrame(() => { popstateRef.current = false; });
@@ -168,8 +164,6 @@ export default function App() {
   const showList = useCallback(() => {
     setCurrentView('list');
     setCurrentEssay(null);
-    setProgress(0);
-    window.scrollTo(0, 0);
     if (immersive) setImmersive(false);
     if (!popstateRef.current) {
       window.history.pushState(null, '', '/');
@@ -179,7 +173,6 @@ export default function App() {
   const openEssay = useCallback((id) => {
     setCurrentView('reading');
     setCurrentEssay(id);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (isMobile()) closeSidebarMobile();
     if (!popstateRef.current) {
       window.history.pushState(null, '', `/e/${encodeURIComponent(id)}`);
@@ -347,8 +340,7 @@ export default function App() {
 
   return (
     <>
-      {currentView === 'reading' && <ProgressBar progress={progress} />}
-      <BackToTop visible={showBackTop} />
+      {currentView === 'list' && <BackToTop visible={showBackTop} />}
       <SidebarOverlay show={isMobile() && sidebarOpen} onClose={closeSidebarMobile} />
       <ImmersiveBar onExit={() => setImmersive(false)} />
 
@@ -375,21 +367,19 @@ export default function App() {
           reading={currentView === 'reading'}
         />
         <main className="main">
-          <div className={currentView === 'list' ? '' : 'listViewHidden'}>
-            <ListView
-              title={headerInfo.title}
-              subtitle={headerInfo.subtitle}
-              showClear={headerInfo.showClear}
-              onClear={handleReset}
-              essays={filteredEssays}
-              onSelectEssay={handleSelectEssay}
-              activeTags={activeTags}
-              onRemoveTag={handleRemoveTag}
-              onTagClick={handleToggleTag}
-              isUnlocked={checkUnlocked}
-              onLockedClick={handleLockedClick}
-            />
-          </div>
+          <ListView
+            title={headerInfo.title}
+            subtitle={headerInfo.subtitle}
+            showClear={headerInfo.showClear}
+            onClear={handleReset}
+            essays={filteredEssays}
+            onSelectEssay={handleSelectEssay}
+            activeTags={activeTags}
+            onRemoveTag={handleRemoveTag}
+            onTagClick={handleToggleTag}
+            isUnlocked={checkUnlocked}
+            onLockedClick={handleLockedClick}
+          />
           {currentView === 'reading' && currentEssay && (
             <ReadingView
               essayId={currentEssay}

@@ -2,6 +2,8 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import { loadEssayContent } from '../lib/contentLoader';
 import { isUnlocked as checkUnlocked } from '../lib/secrets';
 import TOC from './TOC';
+import ProgressBar from './ProgressBar';
+import BackToTop from './BackToTop';
 import ImageLightbox from './ImageLightbox';
 
 const FONT_KEY = 'sy-font-level';
@@ -12,9 +14,12 @@ const FONT_LEVELS = [
 ];
 
 export default function ReadingView({ essayId, onBack, onToggleImmersive, essays, essayOrder, onUnlock }) {
+  const containerRef = useRef(null);
   const articleRef = useRef(null);
   const topRef = useRef(null);
   const [topScrolled, setTopScrolled] = useState(false);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [showBackTop, setShowBackTop] = useState(false);
   const [chapterIdx, setChapterIdx] = useState(0);
   const [fontLevel, setFontLevel] = useState(() => {
     const saved = parseInt(localStorage.getItem(FONT_KEY), 10);
@@ -32,6 +37,12 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
   const essay = essays[essayId];
   const hasChapters = essay && essay.chapters && essay.chapters.length > 0;
   const isLocked = essay?.locked && !checkUnlocked(essayId);
+
+  // Lock body scroll while reading view is mounted
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   // Load content when essay changes
   useEffect(() => {
@@ -84,12 +95,12 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
 
   // Scroll to top when essay changes
   useEffect(() => {
-    window.scrollTo(0, 0);
+    containerRef.current?.scrollTo(0, 0);
   }, [essayId]);
 
   // Scroll to top when chapter changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chapterIdx]);
 
   // Listen for hashchange (browser back/forward with chapter hashes)
@@ -108,13 +119,19 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
     return () => window.removeEventListener('hashchange', onHash);
   }, [contentData, chapterIdx]);
 
-  // Scroll detection for sticky top bar
+  // Scroll detection for sticky top bar + progress + back-to-top
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
     const onScroll = () => {
-      setTopScrolled(window.scrollY > 80);
+      const st = container.scrollTop;
+      setTopScrolled(st > 80);
+      setShowBackTop(st > 400);
+      const dh = container.scrollHeight - container.clientHeight;
+      setReadingProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    container.addEventListener('scroll', onScroll, { passive: true });
+    return () => container.removeEventListener('scroll', onScroll);
   }, [essayId]);
 
   if (!essay) return null;
@@ -263,9 +280,11 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
   const chapterList = contentData?.chapters || essay.chapters || [];
 
   return (
-    <div className="reading vis">
+    <div className="reading vis" ref={containerRef}>
+      <ProgressBar progress={readingProgress} />
+      <BackToTop visible={showBackTop} scrollContainer={containerRef} />
       {!isLocked && !loading && !error && (
-        <TOC contentRef={articleRef} essayId={essayId} chapterIdx={chapterIdx} />
+        <TOC contentRef={articleRef} essayId={essayId} chapterIdx={chapterIdx} scrollContainerRef={containerRef} />
       )}
       <div className="readingWrap">
         <div className="readingInner">
