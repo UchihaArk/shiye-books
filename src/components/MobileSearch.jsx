@@ -52,7 +52,13 @@ export default function MobileSearch({
     if (open) {
       setLocalQuery(searchQuery || '');
       setRandomTags(pickRandom(allTags || [], 8));
-      const timer = setTimeout(() => inputRef.current?.focus(), 150);
+      setShowSuggestions(false);
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.click();
+        }
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -150,7 +156,7 @@ export default function MobileSearch({
       </div>
 
       {/* Content area — scrollable */}
-      <div className="mobileSearchContent" onClick={(e) => e.stopPropagation()}>
+      <div className="mobileSearchContent">
         {/* Preview results when typing */}
         {hasQuery && previewResults.length > 0 && (
           <div className="mobileSearchResults">
