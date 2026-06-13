@@ -822,7 +822,14 @@ mark.searchHL {
   .rdLockedBtn,
   .tocItem,
   .secretBtn,
-  .secretClose {
+  .secretClose,
+  /* Card child elements — their independent transitions delay click */
+  .cardImg,
+  .cardTitle,
+  .cardRead,
+  .cardTag,
+  .cardBody,
+  .cardLocked {
     transition: none !important;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;

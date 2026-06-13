@@ -53,13 +53,27 @@ export default function MobileSearch({
       setLocalQuery(searchQuery || '');
       setRandomTags(pickRandom(allTags || [], 8));
       setShowSuggestions(false);
-      const timer = setTimeout(() => {
+      // Wait for slide-up animation (300ms) to finish, then focus
+      const page = pageRef.current;
+      const focusInput = () => {
         if (inputRef.current) {
-          inputRef.current.focus();
-          inputRef.current.click();
+          inputRef.current.focus({ preventScroll: true });
+          // iOS Safari: click() helps trigger keyboard
+          try { inputRef.current.click(); } catch (_) {}
         }
-      }, 300);
-      return () => clearTimeout(timer);
+      };
+      if (page) {
+        page.addEventListener('animationend', focusInput, { once: true });
+        // Fallback: if animationend doesn't fire (e.g. animation skipped)
+        const fallback = setTimeout(focusInput, 500);
+        return () => {
+          page.removeEventListener('animationend', focusInput);
+          clearTimeout(fallback);
+        };
+      } else {
+        const fallback = setTimeout(focusInput, 400);
+        return () => clearTimeout(fallback);
+      }
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -94,7 +108,8 @@ export default function MobileSearch({
 
   // Click on backdrop (empty area) to close
   const handlePageClick = (e) => {
-    if (e.target === pageRef.current) {
+    // Close if click is NOT on the search bar or any interactive element
+    if (!e.target.closest('.mobileSearchBar') && !e.target.closest('button')) {
       onClose();
     }
   };
