@@ -1,4 +1,18 @@
-export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked, onLockedClick }) {
+/** Highlight occurrences of `query` inside `text` with <mark> tags. */
+function HighlightText({ text, query }) {
+  if (!query || !query.trim()) return text;
+  const q = query.trim();
+  const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  if (parts.length === 1) return text;
+  return parts.filter(Boolean).map((part, i) =>
+    regex.test(part)
+      ? <mark key={i} className="searchHL">{part}</mark>
+      : part
+  );
+}
+
+export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked, onLockedClick, searchQuery }) {
   if (!essays.length) {
     return (
       <div className="listView">
@@ -28,20 +42,24 @@ export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked
               <img className="cardImg" src={e.cover} alt={e.title} loading="lazy" />
             </div>
             <div className="cardBody">
-              <div className="cardTitle">{e.title}</div>
+              <div className="cardTitle">
+                <HighlightText text={e.title} query={searchQuery} />
+              </div>
               <div className="cardMeta">
                 {e.author && <span className="cardAuthor">{e.author}</span>}
                 <span className="cardDate">{e.date}</span>
                 <span className="cardCat">{e.category}</span>
                 <span className="cardTime">{e.time}</span>
               </div>
-              <div className="cardSum">{e.summary}</div>
+              <div className="cardSum">
+                <HighlightText text={e.summary} query={searchQuery} />
+              </div>
               <div className="cardFt">
                 <div className="cardTags">
                   {e.tags.map((t) => (
                     <span
                       key={t}
-                      className="cardTag"
+                      className={`cardTag${searchQuery && t.toLowerCase().includes(searchQuery.toLowerCase()) ? ' cardTagHL' : ''}`}
                       onClick={(ev) => {
                         ev.stopPropagation();
                         onTagClick?.(t);

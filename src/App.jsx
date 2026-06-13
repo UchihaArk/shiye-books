@@ -8,6 +8,7 @@ import ReadingView from './components/ReadingView';
 import BackToTop from './components/BackToTop';
 import ImmersiveBar from './components/ImmersiveBar';
 import SecretModal from './components/SecretModal';
+import MobileSearch from './components/MobileSearch';
 import { loadIndex, clearIndexCache } from './lib/api';
 import { verifySecret, isUnlocked as checkUnlocked, markUnlocked } from './lib/secrets';
 
@@ -60,6 +61,9 @@ export default function App() {
 
   // Secret unlock state
   const [unlockTarget, setUnlockTarget] = useState(null);
+
+  // Mobile search page
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Flag: when true, navigation is triggered by popstate — skip pushState
   const popstateRef = useRef(false);
@@ -377,10 +381,8 @@ export default function App() {
             activeTags={activeTags}
             onRemoveTag={handleRemoveTag}
             onTagClick={handleToggleTag}
-            onSearch={handleSearch}
-            onSelectTag={handleSelectTag}
+            onOpenMobileSearch={() => setMobileSearchOpen(true)}
             searchQuery={searchQuery}
-            allTags={indexData?.allTags || []}
             isUnlocked={checkUnlocked}
             onLockedClick={handleLockedClick}
           />
@@ -405,6 +407,15 @@ export default function App() {
           onClose={handleSecretClose}
         />
       )}
+
+      <MobileSearch
+        open={mobileSearchOpen}
+        searchQuery={searchQuery}
+        onSearch={handleSearch}
+        onSelectTag={handleSelectTag}
+        onClose={() => setMobileSearchOpen(false)}
+        allTags={indexData?.allTags || []}
+      />
     </>
   );
 }
