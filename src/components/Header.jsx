@@ -21,6 +21,7 @@ export default function Header({
   allTags,
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [randomTags, setRandomTags] = useState(() => pickRandom(allTags, 5));
   const wrapperRef = useRef(null);
 
@@ -101,9 +102,62 @@ export default function Header({
           )}
         </div>
       </div>
+      {/* Mobile search icon button — visible only on small screens */}
+      <button className="hdrBtn mobileSearchBtn" title="搜索" onClick={() => setMobileSearchOpen(true)}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+      </button>
+
       <div className="headerRight">
         <ThemePanel theme={theme} onSwitch={onSwitchTheme} />
       </div>
+
+      {/* Mobile search overlay */}
+      {mobileSearchOpen && (
+        <div className="mobileSearchOverlay">
+          <div className="mobileSearchBar">
+            <svg className="searchIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              placeholder="搜索文章或标签…"
+              value={searchQuery}
+              autoFocus
+              onChange={(e) => {
+                onSearch(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                setRandomTags(pickRandom(allTags, 5));
+                setShowSuggestions(true);
+              }}
+            />
+            <button className="mobileSearchClose" onClick={() => { setMobileSearchOpen(false); setShowSuggestions(false); }}>取消</button>
+          </div>
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="mobileSearchSuggestions">
+              {suggestions.map((tag) => (
+                <button
+                  key={tag}
+                  className="tagSuggestion"
+                  onClick={() => {
+                    onSelectTag(tag);
+                    setShowSuggestions(false);
+                    setMobileSearchOpen(false);
+                  }}
+                >
+                  <span className="tagSugIcon">#</span>
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
