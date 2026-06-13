@@ -156,6 +156,7 @@ body::-webkit-scrollbar-thumb {
   background-attachment: fixed;
 }
 [data-theme='night'] .header,
+[data-theme='night'] .reading.vis,
 [data-theme='night'] .rdTop {
   background-image: radial-gradient(
     ellipse at 50% 0%,
@@ -2030,10 +2031,7 @@ mark.searchHL {
     font-size: 0.8rem;
     padding: 4px 0 4px 14px;
   }
-  .rdBack {
-    font-size: 0.9rem;
-    padding: 8px 16px;
-  }
+  /* rdBack is a 34×34 icon button — no text padding needed */
   .rdTitle {
     font-size: 2.5rem;
     letter-spacing: 0.03em;
