@@ -7,24 +7,52 @@ import BackToTop from './BackToTop';
 import ImageLightbox from './ImageLightbox';
 
 const FONT_KEY = 'sy-font-level';
+const THEME_KEY = 'sy-theme';
 const FONT_LEVELS = [
   { label: 'A', cls: 'font-sm', title: '小' },
   { label: 'A', cls: 'font-md', title: '中' },
   { label: 'A', cls: 'font-lg', title: '大' },
 ];
 
+const READING_THEMES = [
+  { key: 'oriental', name: '书卷', swatch: '#F5EFE4' },
+  { key: 'magazine', name: '杂志', swatch: '#FFF' },
+  { key: 'night', name: '暗夜', swatch: '#262220' },
+];
+
+const themeIconPaths = {
+  oriental: (
+    <>
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+    </>
+  ),
+  magazine: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18M9 3v18" />
+    </>
+  ),
+  night: <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />,
+};
+
 export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnlock }) {
   const containerRef = useRef(null);
   const articleRef = useRef(null);
   const topRef = useRef(null);
+  const fontBtnRef = useRef(null);
   const [topScrolled, setTopScrolled] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [showBackTop, setShowBackTop] = useState(false);
   const [chapterIdx, setChapterIdx] = useState(0);
   const [fontLevel, setFontLevel] = useState(() => {
     const saved = parseInt(localStorage.getItem(FONT_KEY), 10);
-    return saved >= 0 && saved <= 2 ? saved : 1; // default: medium
+    return saved >= 0 && saved <= 2 ? saved : 1;
   });
+  const [readingTheme, setReadingTheme] = useState(() => {
+    return localStorage.getItem(THEME_KEY) || 'oriental';
+  });
+  const [fontToast, setFontToast] = useState(false);
 
   // Async content state
   const [contentData, setContentData] = useState(null);
@@ -310,34 +338,52 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
                   <path d="m12 19-7-7 7-7" />
                 </svg>
               </button>
-              {(topScrolled) && (
-                <div className="rdStickyTitle">
-                  <span className="rdStickyTitleText">{essay.title}</span>
-                  {hasChapters && currentChapterTitle && (
-                    <span className="rdStickyChapter"> · {currentChapterTitle}</span>
-                  )}
-                  {hasChapters && chapterLabel && (
-                    <span className="rdChLabel">{chapterLabel}</span>
-                  )}
-                </div>
-              )}
+              <div className={`rdStickyTitle${topScrolled ? ' vis' : ''}`}>
+                <span className="rdStickyTitleText">{essay.title}</span>
+                {hasChapters && currentChapterTitle && (
+                  <span className="rdStickyChapter"> · {currentChapterTitle}</span>
+                )}
+                {hasChapters && chapterLabel && (
+                  <span className="rdChLabel">{chapterLabel}</span>
+                )}
+              </div>
             </div>
             <div className="rdTopR">
               <div className="fontToggleWrap">
                 <button
+                  ref={fontBtnRef}
                   className="fontToggle"
                   onClick={() => {
                     const next = (fontLevel + 1) % 3;
                     setFontLevel(next);
                     localStorage.setItem(FONT_KEY, next);
+                    setFontToast(true);
+                    setTimeout(() => setFontToast(false), 1000);
+                    if (fontBtnRef.current) fontBtnRef.current.blur();
                   }}
                 >
                   {FONT_LEVELS.map((fl, i) => (
                     <span key={i} className={`ftDot${i === fontLevel ? ' active' : ''}`} />
                   ))}
                 </button>
-                <span className="fontHint">字号：{FONT_LEVELS[fontLevel].title}</span>
+                <span className={`fontHint${fontToast ? ' show' : ''}`}>字号：{FONT_LEVELS[fontLevel].title}</span>
               </div>
+              <button
+                className="rdThemeBtn"
+                onClick={() => {
+                  const keys = READING_THEMES.map(t => t.key);
+                  const idx = keys.indexOf(readingTheme);
+                  const next = keys[(idx + 1) % keys.length];
+                  setReadingTheme(next);
+                  localStorage.setItem(THEME_KEY, next);
+                  document.documentElement.setAttribute('data-theme', next);
+                }}
+                title="切换主题"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  {themeIconPaths[readingTheme] || themeIconPaths.oriental}
+                </svg>
+              </button>
             </div>
           </div>
 
