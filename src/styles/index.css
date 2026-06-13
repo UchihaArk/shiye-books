@@ -766,7 +766,7 @@ mark.searchHL {
 }
 /* Disable ALL hover effects on touch devices to prevent sticky state & click吞掉 */
 @media (hover: none) {
-  /* ─── Cards ─── */
+  /* ─── Cards: kill hover transform, BUT keep pointer-events working ─── */
   .card,
   .card:hover,
   .card:active {
@@ -774,6 +774,11 @@ mark.searchHL {
     transition: none !important;
     box-shadow: var(--sh) !important;
     border-color: var(--bd2) !important;
+    /* CRITICAL: disable fadeUp animation on mobile.
+       The animation-delay + fadeUp both fill-mode causes opacity:0 during
+       the delay period, which blocks pointer events and makes taps silently
+       fail. Remove animation entirely on touch devices. */
+    animation: none !important;
   }
   [data-theme='night'] .card:hover,
   [data-theme='night'] .card:active,
@@ -2292,7 +2297,9 @@ mark.searchHL {
     background: var(--bg);
     display: flex;
     flex-direction: column;
-    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* No slideUp animation on the whole page — the search bar must be
+       immediately visible for iOS Safari to accept focus() and show the
+       keyboard. Only the content area below animates in. */
   }
   @keyframes slideUp {
     from { transform: translateY(30%); opacity: 0; }
@@ -2306,6 +2313,7 @@ mark.searchHL {
     border-bottom: 1px solid var(--bd);
     background: var(--bg-card);
     flex-shrink: 0;
+    /* Search bar appears instantly — no animation — so iOS can focus the input */
   }
   .mobileSearchBack {
     width: 36px;
@@ -2445,6 +2453,7 @@ mark.searchHL {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    animation: fadeIn 0.3s ease;
   }
   .mobileSearchResults {
     padding: 0 0 20px;

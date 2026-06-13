@@ -24,7 +24,6 @@ export default function MobileSearch({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [randomTags, setRandomTags] = useState(() => pickRandom(allTags || [], 8));
   const inputRef = useRef(null);
-  const pageRef = useRef(null);
 
   const tagSuggestions = localQuery.trim()
     ? (allTags || []).filter((t) =>
@@ -47,34 +46,36 @@ export default function MobileSearch({
     ).slice(0, 20);
   }, [localQuery, allEssays, essayOrder]);
 
-  // Open keyboard on mount
+  // Focus input when search page opens.
+  // iOS Safari requires the input to be VISIBLE (not visibility:hidden, not display:none,
+  // not off-screen) at the time focus() is called, otherwise it silently ignores the call.
+  //
+  // The previous approach used animationend + setTimeout which had two issues:
+  // 1. animationend might not fire if the animation was skipped
+  // 2. The focus() was too far from the user gesture call stack
+  //
+  // New approach: the CSS animation (slideUp) starts from translateY(30%) not from
+  // display:none, so the input IS in the viewport immediately. We just need a short
+  // delay for React to commit the DOM, then focus.
   useEffect(() => {
-    if (open) {
-      setLocalQuery(searchQuery || '');
-      setRandomTags(pickRandom(allTags || [], 8));
-      setShowSuggestions(false);
-      // Wait for slide-up animation (300ms) to finish, then focus
-      const page = pageRef.current;
-      const focusInput = () => {
-        if (inputRef.current) {
-          inputRef.current.focus({ preventScroll: true });
-          // iOS Safari: click() helps trigger keyboard
-          try { inputRef.current.click(); } catch (_) {}
-        }
-      };
-      if (page) {
-        page.addEventListener('animationend', focusInput, { once: true });
-        // Fallback: if animationend doesn't fire (e.g. animation skipped)
-        const fallback = setTimeout(focusInput, 500);
-        return () => {
-          page.removeEventListener('animationend', focusInput);
-          clearTimeout(fallback);
-        };
-      } else {
-        const fallback = setTimeout(focusInput, 400);
-        return () => clearTimeout(fallback);
-      }
-    }
+    if (!open) return;
+
+    setLocalQuery(searchQuery || '');
+    setRandomTags(pickRandom(allTags || [], 8));
+    setShowSuggestions(false);
+
+    // Use a simple two-stage focus:
+    // 1. requestAnimationFrame: ensures React has committed the DOM
+    // 2. setTimeout(50): small grace period for layout/paint
+    let cancelled = false;
+    requestAnimationFrame(() => {
+      if (cancelled) return;
+      setTimeout(() => {
+        if (cancelled) return;
+        inputRef.current?.focus({ preventScroll: true });
+      }, 50);
+    });
+    return () => { cancelled = true; };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = () => {
@@ -102,13 +103,10 @@ export default function MobileSearch({
 
   const handleSelectEssay = (id) => {
     onClose();
-    // Small delay to let search page close first
     setTimeout(() => onSelectEssay(id), 50);
   };
 
-  // Click on backdrop (empty area) to close
   const handlePageClick = (e) => {
-    // Close if click is NOT on the search bar or any interactive element
     if (!e.target.closest('.mobileSearchBar') && !e.target.closest('button')) {
       onClose();
     }
@@ -129,8 +127,7 @@ export default function MobileSearch({
   const hasQuery = localQuery.trim().length > 0;
 
   return (
-    <div className="mobileSearchPage" ref={pageRef} onClick={handlePageClick}>
-      {/* Top bar: back + input + search button */}
+    <div className="mobileSearchPage" onClick={handlePageClick}>
       <div className="mobileSearchBar" onClick={(e) => e.stopPropagation()}>
         <button className="mobileSearchBack" onClick={onClose} aria-label="返回">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -145,6 +142,10 @@ export default function MobileSearch({
           <input
             ref={inputRef}
             type="text"
+            inputMode="text"
+            enterKeyHint="search"
+            autoCapitalize="off"
+            autoCorrect="off"
             placeholder="搜索文章或标签…"
             value={localQuery}
             onChange={(e) => {
@@ -170,9 +171,7 @@ export default function MobileSearch({
         </button>
       </div>
 
-      {/* Content area — scrollable */}
       <div className="mobileSearchContent">
-        {/* Preview results when typing */}
         {hasQuery && previewResults.length > 0 && (
           <div className="mobileSearchResults">
             <div className="mobileSearchResultsLabel">
@@ -194,7 +193,6 @@ export default function MobileSearch({
           </div>
         )}
 
-        {/* No results */}
         {hasQuery && previewResults.length === 0 && (
           <div className="mobileSearchHint">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" width="40" height="40" opacity="0.3">
@@ -205,7 +203,6 @@ export default function MobileSearch({
           </div>
         )}
 
-        {/* Tag suggestions when no query or query matches tags */}
         {!hasQuery && showSuggestions && tagSuggestions.length > 0 && (
           <div className="mobileSearchTags">
             <div className="mobileSearchTagsLabel">热门标签</div>
@@ -224,7 +221,6 @@ export default function MobileSearch({
           </div>
         )}
 
-        {/* Empty state */}
         {!hasQuery && !showSuggestions && (
           <div className="mobileSearchHint">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" width="40" height="40" opacity="0.3">
