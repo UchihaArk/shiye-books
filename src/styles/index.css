@@ -766,6 +766,7 @@ mark.searchHL {
 }
 /* Disable ALL hover effects on touch devices to prevent sticky state & click吞掉 */
 @media (hover: none) {
+  /* ─── Cards ─── */
   .card,
   .card:hover,
   .card:active {
@@ -797,6 +798,34 @@ mark.searchHL {
   .card:active .cardRead {
     opacity: 1 !important;
     transform: translateX(0) !important;
+  }
+
+  /* ─── All buttons & interactive elements — kill transition & double-tap delay ─── */
+  .cardTag,
+  .rdBack,
+  .rdThemeBtn,
+  .fontToggle,
+  .rdChPill,
+  .navBtn,
+  .sidebarItem,
+  .hdrBtn,
+  .clearBtn,
+  .activeTagChip,
+  .chipX,
+  .mobileSearchBack,
+  .mobileSearchBtn,
+  .mobileSearchTag,
+  .mobileSearchResult,
+  .listSearchToggle,
+  .mobileSearchClear,
+  .backToTopBtn,
+  .rdLockedBtn,
+  .tocItem,
+  .secretBtn,
+  .secretClose {
+    transition: none !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 .cardImgW {

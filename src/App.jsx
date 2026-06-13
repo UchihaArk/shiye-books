@@ -119,12 +119,12 @@ export default function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentView, unlockTarget]);
 
-  // Listen for open-essay events from navigation buttons
+  // Listen for open-essay events from navigation buttons (always replace — prev/next)
   useEffect(() => {
-    const handler = (e) => openEssay(e.detail);
+    const handler = (e) => openEssay(e.detail, true);
     window.addEventListener('open-essay', handler);
     return () => window.removeEventListener('open-essay', handler);
-  }, []);
+  }, [openEssay]);
 
   // --- Browser history: popstate (back / forward) ---
   useEffect(() => {
@@ -159,18 +159,27 @@ export default function App() {
     setCurrentView('list');
     setCurrentEssay(null);
     if (!popstateRef.current) {
-      window.history.pushState(null, '', '/');
+      // replaceState: going back to list replaces the current history entry
+      window.history.replaceState(null, '', '/');
     }
   }, []);
 
-  const openEssay = useCallback((id) => {
+  const openEssay = useCallback((id, replace = false) => {
+    const prevView = currentView;
     setCurrentView('reading');
     setCurrentEssay(id);
     if (isMobile()) closeSidebarMobile();
     if (!popstateRef.current) {
-      window.history.pushState(null, '', `/e/${encodeURIComponent(id)}`);
+      const url = `/e/${encodeURIComponent(id)}`;
+      // replace: article-to-article navigation (prev/next), search→article
+      // push: list→article (first entry into reading)
+      if (replace || prevView === 'reading') {
+        window.history.replaceState(null, '', url);
+      } else {
+        window.history.pushState(null, '', url);
+      }
     }
-  }, []);
+  }, [currentView]);
 
   const handleToggleSidebar = useCallback(() => {
     if (isMobile()) {
@@ -399,7 +408,7 @@ export default function App() {
         searchQuery={searchQuery}
         onSearch={handleSearch}
         onSelectTag={handleSelectTag}
-        onSelectEssay={handleSelectEssay}
+        onSelectEssay={(id) => openEssay(id, true)}
         onClose={() => setMobileSearchOpen(false)}
         allTags={indexData?.allTags || []}
         allEssays={essays}
