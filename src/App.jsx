@@ -102,6 +102,37 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [currentView]);
 
+  // --- Actions (defined BEFORE useEffects to avoid TDZ) ---
+  const closeSidebarMobile = useCallback(() => {
+    if (isMobile()) setSidebarOpen(false);
+  }, []);
+
+  const showList = useCallback(() => {
+    setCurrentView('list');
+    setCurrentEssay(null);
+    if (!popstateRef.current) {
+      // replaceState: going back to list replaces the current history entry
+      window.history.replaceState(null, '', '/');
+    }
+  }, []);
+
+  const openEssay = useCallback((id, replace = false) => {
+    const prevView = currentView;
+    setCurrentView('reading');
+    setCurrentEssay(id);
+    if (isMobile()) closeSidebarMobile();
+    if (!popstateRef.current) {
+      const url = `/e/${encodeURIComponent(id)}`;
+      // replace: article-to-article navigation (prev/next), search→article
+      // push: list→article (first entry into reading)
+      if (replace || prevView === 'reading') {
+        window.history.replaceState(null, '', url);
+      } else {
+        window.history.pushState(null, '', url);
+      }
+    }
+  }, [currentView, closeSidebarMobile]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -154,43 +185,13 @@ export default function App() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // --- Actions ---
-  const showList = useCallback(() => {
-    setCurrentView('list');
-    setCurrentEssay(null);
-    if (!popstateRef.current) {
-      // replaceState: going back to list replaces the current history entry
-      window.history.replaceState(null, '', '/');
-    }
-  }, []);
-
-  const openEssay = useCallback((id, replace = false) => {
-    const prevView = currentView;
-    setCurrentView('reading');
-    setCurrentEssay(id);
-    if (isMobile()) closeSidebarMobile();
-    if (!popstateRef.current) {
-      const url = `/e/${encodeURIComponent(id)}`;
-      // replace: article-to-article navigation (prev/next), search→article
-      // push: list→article (first entry into reading)
-      if (replace || prevView === 'reading') {
-        window.history.replaceState(null, '', url);
-      } else {
-        window.history.pushState(null, '', url);
-      }
-    }
-  }, [currentView]);
-
+  // --- Other Actions ---
   const handleToggleSidebar = useCallback(() => {
     if (isMobile()) {
       setSidebarOpen((o) => !o);
     } else {
       setSidebarCollapsed((c) => !c);
     }
-  }, []);
-
-  const closeSidebarMobile = useCallback(() => {
-    if (isMobile()) setSidebarOpen(false);
   }, []);
 
   const handleSwitchTheme = useCallback((t) => setTheme(t), []);
