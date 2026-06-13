@@ -194,7 +194,11 @@ body::-webkit-scrollbar-thumb {
   align-items: center;
   padding: 0 16px;
   z-index: 100;
-  transition: background var(--t), border-color var(--t), transform var(--t);
+  transition: background var(--t), border-color var(--t), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Auto-hide header when reading view scrolls down */
+.header.header-hidden {
+  transform: translateY(-100%);
 }
 
 .headerLeft {
@@ -724,6 +728,24 @@ body::-webkit-scrollbar-thumb {
 [data-theme='oriental'] .card:hover {
   border-color: var(--ac);
 }
+/* Disable hover transform on touch devices to prevent sticky hover state */
+@media (hover: none) {
+  .card:hover {
+    transform: none;
+    box-shadow: var(--sh);
+    border-color: var(--bd2);
+  }
+  [data-theme='night'] .card:hover,
+  [data-theme='oriental'] .card:hover {
+    border-color: var(--bd2);
+  }
+  .card:hover .cardImg {
+    transform: none;
+  }
+  .card:hover .cardTitle {
+    color: var(--tx);
+  }
+}
 .cardImgW {
   overflow: hidden;
   position: relative;
@@ -870,6 +892,11 @@ body::-webkit-scrollbar-thumb {
   justify-content: center;
   scrollbar-width: auto;
   scrollbar-color: var(--bd) transparent;
+  transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* When system header is hidden, reading view fills the full screen */
+.reading.vis.no-header {
+  top: 0;
 }
 .reading.vis::-webkit-scrollbar {
   width: 8px;
@@ -919,17 +946,18 @@ body::-webkit-scrollbar-thumb {
 .rdBack {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-family: var(--font-s);
-  font-size: 0.8125rem;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   color: var(--tx3);
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 0;
+  border-radius: 50%;
   transition: all 0.2s;
   background: var(--bg-s);
   border: 1px solid var(--bd2);
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
 }
 .rdBack:hover,
 .rdBack:active {
@@ -938,8 +966,39 @@ body::-webkit-scrollbar-thumb {
   background: var(--ac-bg);
 }
 .rdBack svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+}
+.rdTopLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.rdStickyTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.rdStickyTitleText {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rdStickyChapter {
+  font-family: var(--font-s);
+  font-size: 0.78rem;
+  color: var(--tx3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .rdTopR {
   display: flex;
@@ -1054,11 +1113,13 @@ body::-webkit-scrollbar-thumb {
   transition: all 0.25s;
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .immersiveEntry svg {
   width: 15px;
   height: 15px;
   opacity: 0.7;
+  flex-shrink: 0;
 }
 .immersiveEntry:hover,
 .immersiveEntry:active {
@@ -1068,6 +1129,15 @@ body::-webkit-scrollbar-thumb {
 }
 .immersiveEntry:hover svg {
   opacity: 1;
+}
+/* Hide text on narrow screens, show icon only */
+@media (max-width: 540px) {
+  .immersiveEntry {
+    padding: 5px 8px;
+  }
+  .immersiveText {
+    display: none;
+  }
 }
 
 .rdTitle {
@@ -2179,8 +2249,21 @@ body.immersive .immBar {
 
   /* Immersive entry */
   .immersiveEntry {
-    font-size: 0.75rem;
-    padding: 6px 14px;
+    padding: 5px 8px;
+  }
+  .immersiveText {
+    display: none;
+  }
+
+  /* Reading top bar */
+  .rdTopLeft {
+    gap: 8px;
+  }
+  .rdStickyTitleText {
+    font-size: 0.82rem;
+  }
+  .rdStickyChapter {
+    font-size: 0.72rem;
   }
 
   /* Nav buttons */
@@ -2236,8 +2319,16 @@ body.immersive .immBar {
     margin-left: 0;
   }
   .immersiveEntry {
-    font-size: 0.7rem;
-    padding: 5px 12px;
+    padding: 5px 6px;
+  }
+  .immersiveText {
+    display: none;
+  }
+  .rdTopR {
+    gap: 6px;
+  }
+  .fontHint {
+    display: none;
   }
 }
 

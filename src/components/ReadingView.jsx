@@ -20,6 +20,8 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
   const [topScrolled, setTopScrolled] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [showBackTop, setShowBackTop] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollTop = useRef(0);
   const [chapterIdx, setChapterIdx] = useState(0);
   const [fontLevel, setFontLevel] = useState(() => {
     const saved = parseInt(localStorage.getItem(FONT_KEY), 10);
@@ -119,7 +121,7 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
     return () => window.removeEventListener('hashchange', onHash);
   }, [contentData, chapterIdx]);
 
-  // Scroll detection for sticky top bar + progress + back-to-top
+  // Scroll detection for sticky top bar + progress + back-to-top + header auto-hide
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -129,10 +131,29 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
       setShowBackTop(st > 400);
       const dh = container.scrollHeight - container.clientHeight;
       setReadingProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
+      // Auto-hide system header on scroll down, show on scroll up
+      const delta = st - lastScrollTop.current;
+      if (st > 120 && delta > 8) {
+        setHeaderHidden(true);
+      } else if (delta < -8 || st <= 120) {
+        setHeaderHidden(false);
+      }
+      lastScrollTop.current = st;
     };
     container.addEventListener('scroll', onScroll, { passive: true });
     return () => container.removeEventListener('scroll', onScroll);
   }, [essayId]);
+
+  // Sync header-hidden state to CSS class on header + reading container
+  useEffect(() => {
+    const header = document.querySelector('.header');
+    if (header) {
+      header.classList.toggle('header-hidden', headerHidden);
+    }
+    if (containerRef.current) {
+      containerRef.current.classList.toggle('no-header', headerHidden);
+    }
+  }, [headerHidden]);
 
   if (!essay) return null;
 
@@ -174,9 +195,12 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
     []
   );
 
-  /**
-   * Build chapter pill items with ellipsis for large chapter counts.
-   */
+  // Determine chapter title for sticky bar
+  const currentChapterTitle = contentData?.chapters?.length > 0 && contentData.chapters[chapterIdx]
+    ? contentData.chapters[chapterIdx].title
+    : '';
+
+  // Build chapter pill items with ellipsis for large chapter counts
   const buildChapterPills = () => {
     const chapters = contentData?.chapters || essay.chapters || [];
     const total = chapters.length;
@@ -289,16 +313,26 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
       <div className="readingWrap">
         <div className="readingInner">
           <div className={`rdTop${topScrolled ? ' scrolled' : ''}`} ref={topRef}>
-            <button className="rdBack" onClick={onBack}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path d="m15 18-6-6 6-6" />
-              </svg>
-              返回
-            </button>
-            <div className="rdTopR">
-              {hasChapters && chapterLabel && (
-                <span className="rdChLabel">{chapterLabel}</span>
+            <div className="rdTopLeft">
+              <button className="rdBack" onClick={onBack} title="返回列表">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5" />
+                  <path d="m12 19-7-7 7-7" />
+                </svg>
+              </button>
+              {(topScrolled) && (
+                <div className="rdStickyTitle">
+                  <span className="rdStickyTitleText">{essay.title}</span>
+                  {hasChapters && currentChapterTitle && (
+                    <span className="rdStickyChapter"> · {currentChapterTitle}</span>
+                  )}
+                  {hasChapters && chapterLabel && (
+                    <span className="rdChLabel">{chapterLabel}</span>
+                  )}
+                </div>
               )}
+            </div>
+            <div className="rdTopR">
               <div className="fontToggleWrap">
                 <button
                   className="fontToggle"
@@ -314,19 +348,12 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
                 </button>
                 <span className="fontHint">字号：{FONT_LEVELS[fontLevel].title}</span>
               </div>
-              <span className="rdEst">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
-                </svg>
-                {essay.time}
-              </span>
-              <button className="immersiveEntry" onClick={onToggleImmersive} style={{ display: 'flex' }}>
+              <button className="immersiveEntry" onClick={onToggleImmersive}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
-                沉浸阅读
+                <span className="immersiveText">沉浸阅读</span>
               </button>
             </div>
           </div>
@@ -334,7 +361,7 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
           <h1 className="rdTitle">{essay.title}</h1>
 
           <div className="rdMeta">
-            <span className="rdDate">{essay.date} · {essay.category}{essay.author ? ` · ${essay.author}` : ''}</span>
+            <span className="rdDate">{essay.date} · {essay.category}{essay.author ? ` · ${essay.author}` : ''}{essay.time ? ` · ${essay.time}` : ''}</span>
             <div className="rdTags">
               {essay.tags.map((t) => (
                 <span key={t} className="rdTag">{t}</span>
