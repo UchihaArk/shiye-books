@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 
 function pickRandom(arr, n) {
   const copy = [...arr];
@@ -15,7 +15,10 @@ export default function MobileSearch({
   onSearch,
   onSelectTag,
   onClose,
+  onSelectEssay,
   allTags,
+  allEssays,
+  essayOrder,
 }) {
   const [localQuery, setLocalQuery] = useState(searchQuery || '');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -23,7 +26,7 @@ export default function MobileSearch({
   const inputRef = useRef(null);
   const pageRef = useRef(null);
 
-  const suggestions = localQuery.trim()
+  const tagSuggestions = localQuery.trim()
     ? (allTags || []).filter((t) =>
         t.toLowerCase().includes(localQuery.trim().toLowerCase())
       )
@@ -31,12 +34,24 @@ export default function MobileSearch({
       ? randomTags
       : [];
 
+  // Real-time preview: filter essays matching localQuery
+  const previewResults = useMemo(() => {
+    const q = localQuery.trim().toLowerCase();
+    if (!q) return [];
+    let list = (essayOrder || []).map((id) => allEssays?.[id]).filter(Boolean);
+    return list.filter((e) =>
+      e.title.toLowerCase().includes(q) ||
+      e.summary.toLowerCase().includes(q) ||
+      e.author?.toLowerCase().includes(q) ||
+      e.tags.some((t) => t.toLowerCase().includes(q))
+    ).slice(0, 20);
+  }, [localQuery, allEssays, essayOrder]);
+
   // Open keyboard on mount
   useEffect(() => {
     if (open) {
       setLocalQuery(searchQuery || '');
       setRandomTags(pickRandom(allTags || [], 8));
-      // Small delay to let animation start, then focus input → opens keyboard
       const timer = setTimeout(() => inputRef.current?.focus(), 150);
       return () => clearTimeout(timer);
     }
@@ -65,6 +80,19 @@ export default function MobileSearch({
     onClose();
   };
 
+  const handleSelectEssay = (id) => {
+    onClose();
+    // Small delay to let search page close first
+    setTimeout(() => onSelectEssay(id), 50);
+  };
+
+  // Click on backdrop (empty area) to close
+  const handlePageClick = (e) => {
+    if (e.target === pageRef.current) {
+      onClose();
+    }
+  };
+
   // Prevent body scroll when search page is open
   useEffect(() => {
     if (open) {
@@ -77,10 +105,12 @@ export default function MobileSearch({
 
   if (!open) return null;
 
+  const hasQuery = localQuery.trim().length > 0;
+
   return (
-    <div className="mobileSearchPage" ref={pageRef}>
+    <div className="mobileSearchPage" ref={pageRef} onClick={handlePageClick}>
       {/* Top bar: back + input + search button */}
-      <div className="mobileSearchBar">
+      <div className="mobileSearchBar" onClick={(e) => e.stopPropagation()}>
         <button className="mobileSearchBack" onClick={onClose} aria-label="返回">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path d="M15 18l-6-6 6-6" />
@@ -119,35 +149,71 @@ export default function MobileSearch({
         </button>
       </div>
 
-      {/* Tag suggestions */}
-      {showSuggestions && suggestions.length > 0 && (
-        <div className="mobileSearchTags">
-          <div className="mobileSearchTagsLabel">热门标签</div>
-          <div className="mobileSearchTagsList">
-            {suggestions.map((tag) => (
+      {/* Content area — scrollable */}
+      <div className="mobileSearchContent" onClick={(e) => e.stopPropagation()}>
+        {/* Preview results when typing */}
+        {hasQuery && previewResults.length > 0 && (
+          <div className="mobileSearchResults">
+            <div className="mobileSearchResultsLabel">
+              找到 {previewResults.length} 篇相关文章
+            </div>
+            {previewResults.map((e) => (
               <button
-                key={tag}
-                className="mobileSearchTag"
-                onClick={() => handleSelectTag(tag)}
+                key={e.id}
+                className="mobileSearchResult"
+                onClick={() => handleSelectEssay(e.id)}
               >
-                <span className="tagSugIcon">#</span>
-                {tag}
+                <span className="mobileSearchResultTitle">{e.title}</span>
+                <span className="mobileSearchResultMeta">
+                  {e.author && <>{e.author} · </>}
+                  {e.category}
+                </span>
               </button>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Empty state hint */}
-      {!showSuggestions && (
-        <div className="mobileSearchHint">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" width="40" height="40" opacity="0.3">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <p>输入关键词搜索文章标题、摘要或标签</p>
-        </div>
-      )}
+        {/* No results */}
+        {hasQuery && previewResults.length === 0 && (
+          <div className="mobileSearchHint">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" width="40" height="40" opacity="0.3">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <p>未找到相关文章</p>
+          </div>
+        )}
+
+        {/* Tag suggestions when no query or query matches tags */}
+        {!hasQuery && showSuggestions && tagSuggestions.length > 0 && (
+          <div className="mobileSearchTags">
+            <div className="mobileSearchTagsLabel">热门标签</div>
+            <div className="mobileSearchTagsList">
+              {tagSuggestions.map((tag) => (
+                <button
+                  key={tag}
+                  className="mobileSearchTag"
+                  onClick={() => handleSelectTag(tag)}
+                >
+                  <span className="tagSugIcon">#</span>
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!hasQuery && !showSuggestions && (
+          <div className="mobileSearchHint">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" width="40" height="40" opacity="0.3">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <p>输入关键词搜索文章标题、摘要或标签</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -413,8 +413,11 @@ export default function App() {
         searchQuery={searchQuery}
         onSearch={handleSearch}
         onSelectTag={handleSelectTag}
+        onSelectEssay={handleSelectEssay}
         onClose={() => setMobileSearchOpen(false)}
         allTags={indexData?.allTags || []}
+        allEssays={essays}
+        essayOrder={essayOrder}
       />
     </>
   );
