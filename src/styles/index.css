@@ -1150,49 +1150,6 @@ mark.searchHL {
   line-height: 2;
 }
 
-/* ─── Immersive Entry — in top bar ─── */
-.immersiveEntry {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 14px;
-  border-radius: 16px;
-  background: var(--bg-s);
-  border: 1px solid var(--bd);
-  color: var(--tx2);
-  font-family: var(--font-s);
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.25s;
-  -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.immersiveEntry svg {
-  width: 15px;
-  height: 15px;
-  opacity: 0.7;
-  flex-shrink: 0;
-}
-.immersiveEntry:hover,
-.immersiveEntry:active {
-  background: var(--ac-bg);
-  border-color: var(--ac);
-  color: var(--ac);
-}
-.immersiveEntry:hover svg {
-  opacity: 1;
-}
-/* Hide text on narrow screens, show icon only */
-@media (max-width: 540px) {
-  .immersiveEntry {
-    padding: 5px 8px;
-  }
-  .immersiveText {
-    display: none;
-  }
-}
-
 .rdTitle {
   font-family: var(--font);
   font-size: 1.8rem;
@@ -1773,104 +1730,6 @@ mark.searchHL {
 }
 
 /* ═══════════════════════════════════════════
-   IMMERSIVE MODE
-   ═══════════════════════════════════════════ */
-body.immersive .header {
-  transform: translateY(-100%);
-  pointer-events: none;
-}
-body.immersive .sidebar {
-  width: 0;
-  min-width: 0;
-  padding: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-body.immersive .backTop {
-  opacity: 0;
-  pointer-events: none;
-}
-body.immersive .reading.vis {
-  top: 0;
-  padding-right: 0;
-}
-body.immersive .progressBar {
-  opacity: 0;
-}
-body.immersive .main {
-  padding: 40px 16px 80px;
-}
-body.immersive .readingInner {
-  /* Keep same width as normal reading mode */
-}
-body.immersive .immersiveEntry {
-  display: none !important;
-}
-body.immersive .rdBack {
-  opacity: 0;
-  pointer-events: none;
-}
-body.immersive .rdTop {
-  position: static;
-  box-shadow: none !important;
-}
-body.immersive .sidebarOverlay {
-  display: none !important;
-}
-
-/* Immersive floating bar */
-.immBar {
-  position: fixed;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-60px);
-  z-index: 96;  background: var(--bg-card);
-  padding: 6px 14px;
-  border-radius: 24px;
-  border: 1px solid var(--bd2);
-  box-shadow: var(--sh);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-}
-.immBar button {
-  background: none;
-  border: none;
-  color: var(--tx3);
-  font-family: var(--font-s);
-  font-size: 0.75rem;
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.immBar button:hover,
-.immBar button:active {
-  color: var(--ac);
-  background: var(--ac-bg);
-}
-.immBar button svg {
-  width: 14px;
-  height: 14px;
-}
-.immBar .escHint {
-  font-size: 0.6rem;
-  color: var(--tx4);
-  border-left: 1px solid var(--bd2);
-  padding-left: 8px;
-  margin-left: 2px;
-  pointer-events: none;
-  white-space: nowrap;
-}
-body.immersive .immBar {
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-}
-
-/* ═══════════════════════════════════════════
    ANIMATIONS
    ═══════════════════════════════════════════ */
 @keyframes fadeIn {
@@ -2193,17 +2052,6 @@ body.immersive .immBar {
   .themeDesc {
     font-size: 0.72rem;
   }
-  .immBar {
-    padding: 8px 18px;
-  }
-  .immBar button {
-    font-size: 0.85rem;
-    padding: 6px 14px;
-  }
-  .immBar button svg {
-    width: 16px;
-    height: 16px;
-  }
 }
 
 /* ═══════════════════════════════════════════
@@ -2324,14 +2172,6 @@ body.immersive .immBar {
   }
   .article h3 {
     font-size: 1.0625rem;
-  }
-
-  /* Immersive entry */
-  .immersiveEntry {
-    padding: 5px 8px;
-  }
-  .immersiveText {
-    display: none;
   }
 
   /* Reading top bar */
@@ -2600,12 +2440,6 @@ body.immersive .immBar {
   .navBtn.next {
     text-align: left;
     margin-left: 0;
-  }
-  .immersiveEntry {
-    padding: 5px 6px;
-  }
-  .immersiveText {
-    display: none;
   }
   .rdTopR {
     gap: 6px;

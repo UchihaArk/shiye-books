@@ -13,15 +13,13 @@ const FONT_LEVELS = [
   { label: 'A', cls: 'font-lg', title: '大' },
 ];
 
-export default function ReadingView({ essayId, onBack, onToggleImmersive, essays, essayOrder, onUnlock }) {
+export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnlock }) {
   const containerRef = useRef(null);
   const articleRef = useRef(null);
   const topRef = useRef(null);
   const [topScrolled, setTopScrolled] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [showBackTop, setShowBackTop] = useState(false);
-  const [headerHidden, setHeaderHidden] = useState(false);
-  const lastScrollTop = useRef(0);
   const [chapterIdx, setChapterIdx] = useState(0);
   const [fontLevel, setFontLevel] = useState(() => {
     const saved = parseInt(localStorage.getItem(FONT_KEY), 10);
@@ -121,7 +119,7 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
     return () => window.removeEventListener('hashchange', onHash);
   }, [contentData, chapterIdx]);
 
-  // Scroll detection for sticky top bar + progress + back-to-top + header auto-hide
+  // Scroll detection for sticky top bar + progress + back-to-top
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -131,29 +129,21 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
       setShowBackTop(st > 400);
       const dh = container.scrollHeight - container.clientHeight;
       setReadingProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
-      // Auto-hide system header on scroll down, show on scroll up
-      const delta = st - lastScrollTop.current;
-      if (st > 120 && delta > 8) {
-        setHeaderHidden(true);
-      } else if (delta < -8 || st <= 120) {
-        setHeaderHidden(false);
-      }
-      lastScrollTop.current = st;
     };
     container.addEventListener('scroll', onScroll, { passive: true });
     return () => container.removeEventListener('scroll', onScroll);
   }, [essayId]);
 
-  // Sync header-hidden state to CSS class on header + reading container
+  // Hide system header immediately when reading view mounts
   useEffect(() => {
     const header = document.querySelector('.header');
-    if (header) {
-      header.classList.toggle('header-hidden', headerHidden);
-    }
-    if (containerRef.current) {
-      containerRef.current.classList.toggle('no-header', headerHidden);
-    }
-  }, [headerHidden]);
+    if (header) header.classList.add('header-hidden');
+    if (containerRef.current) containerRef.current.classList.add('no-header');
+    return () => {
+      if (header) header.classList.remove('header-hidden');
+      if (containerRef.current) containerRef.current.classList.remove('no-header');
+    };
+  }, []);
 
   if (!essay) return null;
 
@@ -348,13 +338,6 @@ export default function ReadingView({ essayId, onBack, onToggleImmersive, essays
                 </button>
                 <span className="fontHint">字号：{FONT_LEVELS[fontLevel].title}</span>
               </div>
-              <button className="immersiveEntry" onClick={onToggleImmersive}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <span className="immersiveText">沉浸阅读</span>
-              </button>
             </div>
           </div>
 

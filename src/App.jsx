@@ -6,7 +6,6 @@ import SidebarOverlay from './components/SidebarOverlay';
 import ListView from './components/ListView';
 import ReadingView from './components/ReadingView';
 import BackToTop from './components/BackToTop';
-import ImmersiveBar from './components/ImmersiveBar';
 import SecretModal from './components/SecretModal';
 import MobileSearch from './components/MobileSearch';
 import { loadIndex, clearIndexCache } from './lib/api';
@@ -56,7 +55,6 @@ export default function App() {
   // UI state
   const [sidebarOpen, setSidebarOpen] = useState(() => !isMobile());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [immersive, setImmersive] = useState(false);
   const [showBackTop, setShowBackTop] = useState(false);
 
   // Secret unlock state
@@ -93,12 +91,6 @@ export default function App() {
     localStorage.setItem('sy-theme', theme);
   }, [theme]);
 
-  // Apply immersive class to body
-  useEffect(() => {
-    document.body.classList.toggle('immersive', immersive);
-    return () => document.body.classList.remove('immersive');
-  }, [immersive]);
-
   // Scroll listener (list mode only)
   useEffect(() => {
     const handleScroll = () => {
@@ -115,7 +107,6 @@ export default function App() {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         if (unlockTarget) { setUnlockTarget(null); return; }
-        if (immersive) { setImmersive(false); return; }
         if (currentView === 'reading') { showList(); closeSidebarMobile(); return; }
         setSearchQuery('');
       }
@@ -126,7 +117,7 @@ export default function App() {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [immersive, currentView, unlockTarget]);
+  }, [currentView, unlockTarget]);
 
   // Listen for open-essay events from navigation buttons
   useEffect(() => {
@@ -147,12 +138,11 @@ export default function App() {
         setCurrentView('list');
         setCurrentEssay(null);
       }
-      if (immersive) setImmersive(false);
       requestAnimationFrame(() => { popstateRef.current = false; });
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [immersive]);
+  }, []);
 
   // On first mount, normalise the URL with replaceState (no extra history entry)
   useEffect(() => {
@@ -168,11 +158,10 @@ export default function App() {
   const showList = useCallback(() => {
     setCurrentView('list');
     setCurrentEssay(null);
-    if (immersive) setImmersive(false);
     if (!popstateRef.current) {
       window.history.pushState(null, '', '/');
     }
-  }, [immersive]);
+  }, []);
 
   const openEssay = useCallback((id) => {
     setCurrentView('reading');
@@ -246,8 +235,7 @@ export default function App() {
     setActiveTags(new Set());
     setSearchQuery('');
     if (currentView === 'reading') showList();
-    if (immersive) setImmersive(false);
-  }, [currentView, immersive, showList]);
+  }, [currentView, showList]);
 
   const handleRetryIndex = useCallback(() => {
     clearIndexCache();
@@ -346,7 +334,6 @@ export default function App() {
     <>
       {currentView === 'list' && <BackToTop visible={showBackTop} />}
       <SidebarOverlay show={isMobile() && sidebarOpen} onClose={closeSidebarMobile} />
-      <ImmersiveBar onExit={() => setImmersive(false)} />
 
       <Header
         theme={theme}
@@ -390,7 +377,6 @@ export default function App() {
             <ReadingView
               essayId={currentEssay}
               onBack={showList}
-              onToggleImmersive={() => setImmersive((m) => !m)}
               essays={essays}
               essayOrder={essayOrder}
               onUnlock={handleLockedClick}
