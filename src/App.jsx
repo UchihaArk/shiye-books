@@ -377,6 +377,10 @@ export default function App() {
             activeTags={activeTags}
             onRemoveTag={handleRemoveTag}
             onTagClick={handleToggleTag}
+            onSearch={handleSearch}
+            onSelectTag={handleSelectTag}
+            searchQuery={searchQuery}
+            allTags={indexData?.allTags || []}
             isUnlocked={checkUnlocked}
             onLockedClick={handleLockedClick}
           />
