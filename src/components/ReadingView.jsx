@@ -126,8 +126,8 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
     const onScroll = () => {
       const st = container.scrollTop;
       setTopScrolled(st > 80);
-      setShowBackTop(st > 400);
       const dh = container.scrollHeight - container.clientHeight;
+      setShowBackTop(st > 400 && st < dh - 40);
       setReadingProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
     };
     container.addEventListener('scroll', onScroll, { passive: true });
