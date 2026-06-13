@@ -118,6 +118,7 @@ function buildEssay(articleDir, category, slug, withContent) {
     category,
     author: meta.author || '',
     date: formatDate(meta.date),
+    dateISO: typeof meta.date === 'string' ? meta.date : (meta.date instanceof Date ? meta.date.toISOString().slice(0, 10) : ''),
     tags: meta.tags || [],
     time: meta.time || '',
     summary: meta.summary || '',
@@ -173,9 +174,12 @@ function scanAllEssays(withContent) {
   }
 
   essayOrder.sort((a, b) => {
-    const da = essays[a].date;
-    const db = essays[b].date;
-    return da < db ? 1 : da > db ? -1 : 0;
+    const da = essays[a].dateISO || '';
+    const db = essays[b].dateISO || '';
+    // ISO date strings sort correctly as plain strings (YYYY-MM-DD)
+    if (da > db) return -1;
+    if (da < db) return 1;
+    return 0;
   });
 
   return { essays, essayOrder, allTags: [...allTags].sort(), categories };
