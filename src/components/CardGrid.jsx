@@ -1,12 +1,15 @@
+import { preloadEssayContent } from '../lib/contentLoader';
+
 /** Highlight occurrences of `query` inside `text` with <mark> tags. */
 function HighlightText({ text, query }) {
   if (!query || !query.trim()) return text;
-  const q = query.trim();
-  const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  const parts = text.split(regex);
+  const esc = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const splitRe = new RegExp(`(${esc})`, 'gi');
+  const testRe = new RegExp(`^${esc}$`, 'i'); // no 'g' flag — avoids lastIndex bug
+  const parts = text.split(splitRe);
   if (parts.length === 1) return text;
   return parts.filter(Boolean).map((part, i) =>
-    regex.test(part)
+    testRe.test(part)
       ? <mark key={i} className="searchHL">{part}</mark>
       : part
   );
@@ -37,6 +40,7 @@ export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked
                 onSelectEssay(e.id);
               }
             }}
+            onMouseEnter={() => { if (!locked) preloadEssayContent(e.id); }}
           >
             <div className="cardImgW">
               <img className="cardImg" src={e.cover} alt={e.title} loading="lazy" />

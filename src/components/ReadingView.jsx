@@ -36,7 +36,7 @@ const themeIconPaths = {
   night: <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />,
 };
 
-export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnlock }) {
+export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnlock, theme, onThemeChange }) {
   const containerRef = useRef(null);
   const articleRef = useRef(null);
   const topRef = useRef(null);
@@ -49,9 +49,7 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
     const saved = parseInt(localStorage.getItem(FONT_KEY), 10);
     return saved >= 0 && saved <= 2 ? saved : 1;
   });
-  const [readingTheme, setReadingTheme] = useState(() => {
-    return localStorage.getItem(THEME_KEY) || 'oriental';
-  });
+  const readingTheme = theme || 'oriental'; // unified from App
   const [fontToast, setFontToast] = useState(false);
 
   // Async content state
@@ -147,19 +145,28 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
     return () => window.removeEventListener('hashchange', onHash);
   }, [contentData, chapterIdx]);
 
-  // Scroll detection for sticky top bar + progress + back-to-top
+  // Scroll detection for sticky top bar + progress + back-to-top — rAF throttled
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    let raf = 0, ticking = false;
     const onScroll = () => {
-      const st = container.scrollTop;
-      setTopScrolled(st > 80);
-      const dh = container.scrollHeight - container.clientHeight;
-      setShowBackTop(st > 400 && st < dh - 40);
-      setReadingProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
+      if (ticking) return;
+      ticking = true;
+      raf = requestAnimationFrame(() => {
+        const st = container.scrollTop;
+        setTopScrolled(st > 80);
+        const dh = container.scrollHeight - container.clientHeight;
+        setShowBackTop(st > 400 && st < dh - 40);
+        setReadingProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
+        ticking = false;
+      });
     };
     container.addEventListener('scroll', onScroll, { passive: true });
-    return () => container.removeEventListener('scroll', onScroll);
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, [essayId]);
 
   // Hide system header immediately when reading view mounts
@@ -374,9 +381,7 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
                   const keys = READING_THEMES.map(t => t.key);
                   const idx = keys.indexOf(readingTheme);
                   const next = keys[(idx + 1) % keys.length];
-                  setReadingTheme(next);
-                  localStorage.setItem(THEME_KEY, next);
-                  document.documentElement.setAttribute('data-theme', next);
+                  onThemeChange?.(next);
                 }}
                 title="切换主题"
               >

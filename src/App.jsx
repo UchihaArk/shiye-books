@@ -1,19 +1,19 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import './styles/index.css';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import SidebarOverlay from './components/SidebarOverlay';
 import ListView from './components/ListView';
-import ReadingView from './components/ReadingView';
 import BackToTop from './components/BackToTop';
-import SecretModal from './components/SecretModal';
-import MobileSearch from './components/MobileSearch';
+import ErrorBoundary from './components/ErrorBoundary';
+import { useIsMobile } from './hooks/useMediaQuery';
 import { loadIndex, clearIndexCache } from './lib/api';
 import { verifySecret, isUnlocked as checkUnlocked, markUnlocked } from './lib/secrets';
 
-function isMobile() {
-  return window.innerWidth <= 768;
-}
+// Lazy-load components that are NOT needed on first paint (list view)
+const ReadingView = lazy(() => import('./components/ReadingView'));
+const SecretModal = lazy(() => import('./components/SecretModal'));
+const MobileSearch = lazy(() => import('./components/MobileSearch'));
 
 /**
  * Read the initial route from the current URL.
@@ -28,6 +28,9 @@ function readRouteFromURL() {
 }
 
 export default function App() {
+  // Responsive breakpoint — re-renders on resize (replaces static isMobile())
+  const isMobile = useIsMobile();
+
   // Async index data
   const [indexData, setIndexData] = useState(null);
   const [indexLoading, setIndexLoading] = useState(true);
@@ -39,7 +42,7 @@ export default function App() {
   const totalEssays = essayOrder.length;
   const latestDate = essayOrder.length ? essays[essayOrder[0]]?.date : '';
 
-  // Theme
+  // Theme — SINGLE source of truth (shared with ReadingView via callback)
   const [theme, setTheme] = useState(() => localStorage.getItem('sy-theme') || 'oriental');
 
   // View state — initialise from URL so refresh preserves current page
@@ -52,8 +55,8 @@ export default function App() {
   const [activeTags, setActiveTags] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
 
-  // UI state
-  const [sidebarOpen, setSidebarOpen] = useState(() => !isMobile());
+  // UI state — sidebarOpen now reacts to isMobile changes
+  const [sidebarOpen, setSidebarOpen] = useState(() => !isMobile);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showBackTop, setShowBackTop] = useState(false);
 
@@ -91,27 +94,35 @@ export default function App() {
     localStorage.setItem('sy-theme', theme);
   }, [theme]);
 
-  // Scroll listener (list mode only)
+  // Scroll listener (list mode only) — rAF throttled
   useEffect(() => {
+    if (currentView !== 'list') return;
+    let raf = 0, ticking = false;
     const handleScroll = () => {
-      if (currentView !== 'list') return;
-      const st = window.scrollY;
-      setShowBackTop(st > 400);
+      if (ticking) return;
+      ticking = true;
+      raf = requestAnimationFrame(() => {
+        const st = window.scrollY;
+        setShowBackTop(st > 400);
+        ticking = false;
+      });
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(raf);
+    };
   }, [currentView]);
 
   // --- Actions (defined BEFORE useEffects to avoid TDZ) ---
   const closeSidebarMobile = useCallback(() => {
-    if (isMobile()) setSidebarOpen(false);
-  }, []);
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
 
   const showList = useCallback(() => {
     setCurrentView('list');
     setCurrentEssay(null);
     if (!popstateRef.current) {
-      // replaceState: going back to list replaces the current history entry
       window.history.replaceState(null, '', '/');
     }
   }, []);
@@ -120,18 +131,16 @@ export default function App() {
     const prevView = currentView;
     setCurrentView('reading');
     setCurrentEssay(id);
-    if (isMobile()) closeSidebarMobile();
+    if (isMobile) closeSidebarMobile();
     if (!popstateRef.current) {
       const url = `/e/${encodeURIComponent(id)}`;
-      // replace: article-to-article navigation (prev/next), search→article
-      // push: list→article (first entry into reading)
       if (replace || prevView === 'reading') {
         window.history.replaceState(null, '', url);
       } else {
         window.history.pushState(null, '', url);
       }
     }
-  }, [currentView, closeSidebarMobile]);
+  }, [currentView, isMobile, closeSidebarMobile]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -148,7 +157,7 @@ export default function App() {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentView, unlockTarget]);
+  }, [currentView, unlockTarget, closeSidebarMobile, showList]);
 
   // Listen for open-essay events from navigation buttons (always replace — prev/next)
   useEffect(() => {
@@ -178,7 +187,7 @@ export default function App() {
   // On first mount, normalise the URL with replaceState (no extra history entry)
   useEffect(() => {
     if (currentView === 'reading' && currentEssay) {
-      const hash = window.location.hash; // preserve chapter hash
+      const hash = window.location.hash;
       window.history.replaceState(null, '', `/e/${encodeURIComponent(currentEssay)}${hash}`);
     } else {
       window.history.replaceState(null, '', '/');
@@ -187,12 +196,12 @@ export default function App() {
 
   // --- Other Actions ---
   const handleToggleSidebar = useCallback(() => {
-    if (isMobile()) {
+    if (isMobile) {
       setSidebarOpen((o) => !o);
     } else {
       setSidebarCollapsed((c) => !c);
     }
-  }, []);
+  }, [isMobile]);
 
   const handleSwitchTheme = useCallback((t) => setTheme(t), []);
 
@@ -206,8 +215,8 @@ export default function App() {
     setActiveCategory((prev) => (prev === cat ? null : cat));
     setActiveTags(new Set());
     if (currentView === 'reading') showList();
-    if (isMobile()) closeSidebarMobile();
-  }, [currentView, showList]);
+    if (isMobile) closeSidebarMobile();
+  }, [currentView, showList, isMobile, closeSidebarMobile]);
 
   const handleToggleTag = useCallback((tag) => {
     setActiveTags((prev) => {
@@ -218,8 +227,8 @@ export default function App() {
     });
     setActiveCategory(null);
     if (currentView === 'reading') showList();
-    if (isMobile()) closeSidebarMobile();
-  }, [currentView, showList]);
+    if (isMobile) closeSidebarMobile();
+  }, [currentView, showList, isMobile, closeSidebarMobile]);
 
   const handleSelectTag = useCallback((tag) => {
     setSearchQuery('');
@@ -341,9 +350,9 @@ export default function App() {
   }
 
   return (
-    <>
+    <ErrorBoundary resetLabel="返回列表" onReset={() => window.location.reload()}>
       {currentView === 'list' && <BackToTop visible={showBackTop} />}
-      <SidebarOverlay show={isMobile() && sidebarOpen} onClose={closeSidebarMobile} />
+      <SidebarOverlay show={isMobile && sidebarOpen} onClose={closeSidebarMobile} />
 
       <Header
         theme={theme}
@@ -359,8 +368,8 @@ export default function App() {
       <div className="app">
         <Sidebar
           activeCategory={activeCategory}
-          collapsed={!isMobile() && sidebarCollapsed}
-          mobileOpen={isMobile() && sidebarOpen}
+          collapsed={!isMobile && sidebarCollapsed}
+          mobileOpen={isMobile && sidebarOpen}
           onToggleCategory={handleToggleCategory}
           onToggleSidebar={handleToggleSidebar}
           essays={essays}
@@ -384,37 +393,61 @@ export default function App() {
             onLockedClick={handleLockedClick}
           />
           {currentView === 'reading' && currentEssay && (
-            <ReadingView
-              essayId={currentEssay}
-              onBack={showList}
-              essays={essays}
-              essayOrder={essayOrder}
-              onUnlock={handleLockedClick}
-            />
+            <ErrorBoundary
+              resetLabel="返回列表"
+              onReset={showList}
+              fallback={(err, reset) => (
+                <div className="appError">
+                  <span>文章加载出错：{err?.message}</span>
+                  <button onClick={reset}>返回列表</button>
+                </div>
+              )}
+            >
+              <Suspense fallback={
+                <div className="rdLoading">
+                  <div className="rdLoadingSpinner" />
+                  <span>正在加载…</span>
+                </div>
+              }>
+                <ReadingView
+                  essayId={currentEssay}
+                  onBack={showList}
+                  essays={essays}
+                  essayOrder={essayOrder}
+                  onUnlock={handleLockedClick}
+                  theme={theme}
+                  onThemeChange={handleSwitchTheme}
+                />
+              </Suspense>
+            </ErrorBoundary>
           )}
         </main>
       </div>
 
       {unlockTarget && essays[unlockTarget] && (
-        <SecretModal
-          title={essays[unlockTarget].title}
-          onVerify={handleSecretVerify}
-          onSuccess={handleSecretSuccess}
-          onClose={handleSecretClose}
-        />
+        <Suspense fallback={null}>
+          <SecretModal
+            title={essays[unlockTarget].title}
+            onVerify={handleSecretVerify}
+            onSuccess={handleSecretSuccess}
+            onClose={handleSecretClose}
+          />
+        </Suspense>
       )}
 
-      <MobileSearch
-        open={mobileSearchOpen}
-        searchQuery={searchQuery}
-        onSearch={handleSearch}
-        onSelectTag={handleSelectTag}
-        onSelectEssay={(id) => openEssay(id, true)}
-        onClose={() => setMobileSearchOpen(false)}
-        allTags={indexData?.allTags || []}
-        allEssays={essays}
-        essayOrder={essayOrder}
-      />
-    </>
+      <Suspense fallback={null}>
+        <MobileSearch
+          open={mobileSearchOpen}
+          searchQuery={searchQuery}
+          onSearch={handleSearch}
+          onSelectTag={handleSelectTag}
+          onSelectEssay={(id) => openEssay(id, true)}
+          onClose={() => setMobileSearchOpen(false)}
+          allTags={indexData?.allTags || []}
+          allEssays={essays}
+          essayOrder={essayOrder}
+        />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
