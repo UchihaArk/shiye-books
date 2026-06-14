@@ -4,4 +4,11 @@ cover: images/cover.jpg
 author: （英）毛姆
 tags: [短篇小说, 毛姆, 带伤疤的男人]
 time: 约 5 分钟
+illustrations:
+  - image: images/vladivostok_station_restaurant.jpg
+    desc: "海参崴车站餐厅——1897年的夜晚"
+  - image: images/obese_russian_storyteller.jpg
+    desc: "神秘的俄国人——肥肉上的罪恶告白"
+  - image: images/dark_stairwell.jpg
+    desc: "六层楼梯井——梦与谋杀的深渊"
 summary: "一八九七年八月，因为工作原因，我不得不从纽约去了彼得格勒，为了安全起见，我奉命取道海参崴。我早上下了飞机，在那里度过了尽量悠闲的天。我记得，在横贯西伯利亚的火车将要出发之前，大约晚上九点，我个人在车站的餐厅用餐。餐厅里很拥挤，"

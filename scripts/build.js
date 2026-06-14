@@ -6,6 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import yaml from 'js-yaml';
 import { Marked } from 'marked';
 
@@ -36,11 +37,42 @@ md.use({
   },
 });
 
-function renderMarkdown(src) {
+// Normalize rendered HTML to plain text for stable paragraph hashing:
+// strip tags, collapse whitespace, Unicode NFC. Trivial formatting/whitespace
+// edits won't change the pid; only actual prose changes do.
+function norm(html) {
+  return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().normalize('NFC');
+}
+
+// Stable paragraph anchor: sha256(normalized text + chapter salt).slice(0,16).
+// Pure text hash (no positional salt) so adding/removing/reordering paragraphs
+// elsewhere never disturbs other paragraphs' pids. chapterSalt distinguishes
+// identical text across chapters; image-only paragraphs get no anchor.
+function pidFor(innerHtml, chapterSalt) {
+  const medialess = innerHtml
+    .replace(/<figure[\s\S]*?<\/figure>/g, '')
+    .replace(/<img[^>]*>/g, '');
+  const t = norm(medialess);
+  if (!t) return null;
+  return createHash('sha256').update(t + '@' + chapterSalt).digest('hex').slice(0, 16);
+}
+
+// Render markdown to HTML. Returns { html, pids } where pids is the list of
+// stable paragraph anchors present (for server-side validation of comments).
+function renderMarkdown(src, chapterSalt = '') {
   let html = md.parse(src);
   let hIdx = 0;
   html = html.replace(/<(h[23])>/g, (_, tag) => `<${tag} id="toc-h-${hIdx++}">`);
-  return html;
+  // Inject stable data-pid onto each <p>. Markdown never nests <p>, so a
+  // non-greedy match over inline content is safe.
+  const pids = [];
+  html = html.replace(/<p>([\s\S]*?)<\/p>/g, (_, inner) => {
+    const pid = pidFor(inner, chapterSalt);
+    if (!pid) return `<p>${inner}</p>`;
+    pids.push(pid);
+    return `<p data-pid="${pid}">${inner}</p>`;
+  });
+  return { html, pids };
 }
 
 function formatDate(dateStr) {
@@ -91,7 +123,9 @@ function scanChapters(articleDir, category, slug, withContent) {
       const contentPath = path.join(chapterDir, 'content.md');
       let contentHtml = '';
       if (fs.existsSync(contentPath)) {
-        contentHtml = renderMarkdown(fs.readFileSync(contentPath, 'utf-8'));
+        const { html, pids } = renderMarkdown(fs.readFileSync(contentPath, 'utf-8'), dirName);
+        contentHtml = html;
+        entry.pids = pids;
       }
       entry.content = resolveImagePaths(contentHtml, category, slug, dirName);
     }
@@ -128,12 +162,18 @@ function buildEssay(articleDir, category, slug, withContent) {
   };
 
   if (withContent) {
+    // Collect stable paragraph ids from chapters (each carries its own .pids)
+    const pids = [];
+    for (const ch of chapters) if (ch.pids) pids.push(...ch.pids);
+
+    // Single-file essay content (chapter salt = '')
     const contentPath = path.join(articleDir, 'content.md');
-    let contentHtml = '';
     if (fs.existsSync(contentPath)) {
-      contentHtml = renderMarkdown(fs.readFileSync(contentPath, 'utf-8'));
+      const { html, pids: contentPids } = renderMarkdown(fs.readFileSync(contentPath, 'utf-8'), '');
+      essay.content = resolveImagePaths(html, category, slug, null);
+      pids.push(...contentPids);
     }
-    essay.content = resolveImagePaths(contentHtml, category, slug, null);
+    essay.pids = [...new Set(pids)];
   }
 
   return essay;

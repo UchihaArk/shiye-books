@@ -15,6 +15,7 @@ export default function ListView({
   isUnlocked,
   onLockedClick,
   searchQuery,
+  viewsMap,
 }) {
   return (
     <div className="listView">
@@ -74,6 +75,7 @@ export default function ListView({
         isUnlocked={isUnlocked}
         onLockedClick={onLockedClick}
         searchQuery={searchQuery}
+        viewsMap={viewsMap}
       />
     </div>
   );

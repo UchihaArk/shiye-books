@@ -7,7 +7,8 @@ import ListView from './components/ListView';
 import BackToTop from './components/BackToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useIsMobile } from './hooks/useMediaQuery';
-import { loadIndex, clearIndexCache } from './lib/api';
+import { loadIndex, clearIndexCache, getViews } from './lib/api';
+import { ingestAdminFromURL } from './lib/admin';
 import { verifySecret, isUnlocked as checkUnlocked, markUnlocked } from './lib/secrets';
 
 // Lazy-load components that are NOT needed on first paint (list view)
@@ -35,6 +36,9 @@ export default function App() {
   const [indexData, setIndexData] = useState(null);
   const [indexLoading, setIndexLoading] = useState(true);
   const [indexError, setIndexError] = useState(null);
+
+  // 阅读量 { [slug]: count }（列表页批量取一次）
+  const [viewsMap, setViewsMap] = useState({});
 
   // Derived data
   const essays = indexData?.essays || {};
@@ -71,6 +75,7 @@ export default function App() {
 
   // --- Load index on mount ---
   useEffect(() => {
+    ingestAdminFromURL(); // ?admin=TOKEN → 进入管理模式并清理 URL
     let cancelled = false;
     loadIndex()
       .then((data) => {
@@ -93,6 +98,16 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('sy-theme', theme);
   }, [theme]);
+
+  // 批量拉取所有文章阅读量（仅在索引加载后取一次）
+  useEffect(() => {
+    if (!essayOrder.length) return;
+    let cancelled = false;
+    getViews(essayOrder).then((m) => {
+      if (!cancelled && m) setViewsMap(m);
+    });
+    return () => { cancelled = true; };
+  }, [essayOrder]);
 
   // Scroll listener (list mode only) — rAF throttled
   useEffect(() => {
@@ -391,6 +406,7 @@ export default function App() {
             searchQuery={searchQuery}
             isUnlocked={checkUnlocked}
             onLockedClick={handleLockedClick}
+            viewsMap={viewsMap}
           />
           {currentView === 'reading' && currentEssay && (
             <ErrorBoundary

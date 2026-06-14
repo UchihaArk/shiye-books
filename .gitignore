@@ -21,3 +21,9 @@ npm-debug.log*
 
 # Secret plaintext (hashed version is auto-generated)
 secrets.local.yaml
+
+# Cloudflare local dev state (wrangler pages dev / D1 local sim)
+.wrangler/
+
+# Local Pages Functions secrets (ADMIN_TOKEN etc.) — never commit
+.dev.vars

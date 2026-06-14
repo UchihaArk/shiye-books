@@ -17,7 +17,9 @@ const cache = new Map();
 export async function loadEssayContent(slug) {
   if (cache.has(slug)) return cache.get(slug);
 
-  const res = await fetch(`${API_BASE}/api/essay/${encodeURIComponent(slug)}.json`);
+  const res = await fetch(`${API_BASE}/api/essay/${encodeURIComponent(slug)}.json`, {
+    cache: 'no-cache', // 内容会随重建变化，始终与服务端校验
+  });
   if (!res.ok) throw new Error(`Failed to load essay: ${slug}`);
 
   const data = await res.json();

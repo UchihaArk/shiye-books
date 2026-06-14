@@ -1,4 +1,5 @@
 import { preloadEssayContent } from '../lib/contentLoader';
+import { formatCount } from '../lib/api';
 
 /** Highlight occurrences of `query` inside `text` with <mark> tags. */
 function HighlightText({ text, query }) {
@@ -15,7 +16,7 @@ function HighlightText({ text, query }) {
   );
 }
 
-export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked, onLockedClick, searchQuery }) {
+export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked, onLockedClick, searchQuery, viewsMap }) {
   if (!essays.length) {
     return (
       <div className="listView">
@@ -28,6 +29,7 @@ export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked
     <div className="grid">
       {essays.map((e, i) => {
         const locked = e.locked && !isUnlocked?.(e.id);
+        const viewsCount = viewsMap?.[e.id] || 0;
         return (
           <div
             key={e.id}
@@ -73,7 +75,16 @@ export default function CardGrid({ essays, onSelectEssay, onTagClick, isUnlocked
                     </span>
                   ))}
                 </div>
-                <span className="cardRead">{locked ? '解锁阅读' : '阅读 →'}</span>
+                <div className="cardFtR">
+                  <span className="cardViews" title={`${viewsCount} 次阅读`}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    {formatCount(viewsCount)}
+                  </span>
+                  <span className="cardRead">{locked ? '解锁阅读' : '阅读 →'}</span>
+                </div>
               </div>
             </div>
             {locked && (

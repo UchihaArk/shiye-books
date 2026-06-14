@@ -4,3 +4,14 @@ compatibility_date = "2026-06-07"
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
+
+# ── D1（复用账户现有库 shiye）── 阅读量计数 + 片段书评
+[[d1_databases]]
+binding = "DB"
+database_name = "shiye"
+database_id = "80d5878d-9c60-4f85-bb2e-75f56529f274"
+
+# ── KV ── 阅读进度 + 评论限流
+[[kv_namespaces]]
+binding = "KV"
+id = "a34433be74364948a743bb87daaca1b0"

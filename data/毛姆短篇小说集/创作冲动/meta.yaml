@@ -4,4 +4,13 @@ cover: images/cover.jpg
 author: （英）毛姆
 tags: [短篇小说, 毛姆, 带伤疤的男人]
 time: 约 52 分钟
+illustrations:
+  - image: images/literary_salon_tuesday.jpg
+    desc: "福里斯特夫人的周二文学沙龙"
+  - image: images/albert_invisible_husband.jpg
+    desc: "阿尔伯特——\"像家具一样的丈夫\""
+  - image: images/cannington_street_lodging.jpg
+    desc: "坎宁顿大街——私奔的去处"
+  - image: images/achilles_statue_inspiration.jpg
+    desc: "阿喀琉斯雕像前的灵感时刻"
 summary: "阿尔伯特·福里斯特夫人是怎么写出《喀琉斯雕像》的，我猜没有几个人知道。 既然它被誉为是当下最伟大的小说之一，想必所有认真研习文学的人都会对它的诞生历程感兴趣。诚如评论家们所言，如果这是一部传世之作，那么以下叙述就不只是供读者消遣，"

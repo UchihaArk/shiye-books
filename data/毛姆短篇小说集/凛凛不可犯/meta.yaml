@@ -4,4 +4,13 @@ cover: images/cover.jpg
 author: （英）毛姆
 tags: [短篇小说, 毛姆, 狮子的外衣]
 time: 约 38 分钟
+illustrations:
+  - image: images/farmhouse_kitchen.jpg
+    desc: "德国兵闯入法国农舍——占领的阴影"
+  - image: images/annette_potatoes.jpg
+    desc: "安妮特与斯的再度相遇"
+  - image: images/food_gifts_reconciliation.jpg
+    desc: "食物换取的脆弱和平"
+  - image: images/annette_drowned_baby.jpg
+    desc: "毁灭——安妮特湿透归来"
 summary: "·哈代明白要想办法把噩耗告诉她，要尽可能婉转地、慢慢地和她讲，但是不管怎样总是要说出发生的不幸。一开始，她好像根本不知道哈代说的是什么意思。 “死了？”她喊道，“死了，我的罗伯特死了？” 此时，瑞德·哈代，一个浪荡的懒汉，"

@@ -1,10 +1,12 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { loadEssayContent } from '../lib/contentLoader';
+import { postView, formatCount, getProgress, saveProgress } from '../lib/api';
 import { isUnlocked as checkUnlocked } from '../lib/secrets';
 import TOC from './TOC';
 import ProgressBar from './ProgressBar';
 import BackToTop from './BackToTop';
 import ImageLightbox from './ImageLightbox';
+import ParagraphComments from './ParagraphComments';
 
 const FONT_KEY = 'sy-font-level';
 const THEME_KEY = 'sy-theme';
@@ -41,6 +43,11 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
   const articleRef = useRef(null);
   const topRef = useRef(null);
   const fontBtnRef = useRef(null);
+  const viewedRef = useRef(null);
+  const chapterIdxRef = useRef(0);
+  const isRestoringRef = useRef(false);
+  const pendingRestoreRef = useRef(null);
+  const lastSaveRef = useRef(0);
   const [topScrolled, setTopScrolled] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [showBackTop, setShowBackTop] = useState(false);
@@ -60,9 +67,31 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
   // Image lightbox state
   const [lightbox, setLightbox] = useState({ src: null, alt: null });
 
+  // 阅读量（进入文章时由 postView 返回）
+  const [viewCount, setViewCount] = useState(null);
+
+  // 批注开关（顶部工具栏，默认关）
+  const [commentsEnabled, setCommentsEnabled] = useState(false);
+
   const essay = essays[essayId];
   const hasChapters = essay && essay.chapters && essay.chapters.length > 0;
   const isLocked = essay?.locked && !checkUnlocked(essayId);
+  chapterIdxRef.current = chapterIdx; // 供异步回调读取最新章节
+
+  // 恢复阅读位置（内容加载后由双 rAF 触发，确保新章节已绘制）
+  const restoreScroll = useCallback(() => {
+    const container = containerRef.current;
+    const p = pendingRestoreRef.current;
+    pendingRestoreRef.current = null;
+    if (!container) { isRestoringRef.current = false; return; }
+    if (p == null) {
+      container.scrollTo(0, 0);
+    } else {
+      const dh = container.scrollHeight - container.clientHeight;
+      container.scrollTo(0, dh > 0 ? Math.min(Math.round((p / 100) * dh), dh) : 0);
+    }
+    isRestoringRef.current = false;
+  }, []);
 
   // Lock body scroll while reading view is mounted
   useEffect(() => {
@@ -70,30 +99,52 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  // Load content when essay changes
+  // Load content when essay changes; restore reading progress (chapter + scroll)
   useEffect(() => {
     if (!essayId || isLocked) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
     setChapterIdx(0);
+    setViewCount(null);
+    isRestoringRef.current = true; // 抑制 chapterIdx 切换的置顶，交由 restore 处理
+
+    // 记录一次阅读（StrictMode 双调用守卫）
+    if (viewedRef.current !== essayId) {
+      viewedRef.current = essayId;
+      postView(essayId).then((c) => {
+        if (!cancelled && c != null) setViewCount(c);
+      });
+    }
 
     loadEssayContent(essayId)
-      .then((data) => {
-        if (!cancelled) {
-          setContentData(data);
-          setLoading(false);
-          // Restore chapter from URL hash (e.g. #c-2 → second chapter)
-          const hash = window.location.hash;
-          const m = hash.match(/^#c-(\d+)$/);
-          if (m) {
-            const ci = parseInt(m[1], 10) - 1; // 1-based in URL → 0-based index
-            const total = (data.chapters || []).length;
-            if (total > 0 && ci >= 0 && ci < total) {
-              setChapterIdx(ci);
-            }
+      .then(async (data) => {
+        if (cancelled) return;
+        setContentData(data);
+        setLoading(false);
+
+        // 恢复章节：URL hash（显式跳转）优先，否则取云端进度
+        const hashM = window.location.hash.match(/^#c-(\d+)$/);
+        const total = (data.chapters || []).length;
+        let ch = 0;
+        let restoreP = null; // null → 置顶；数值 → 滚到该百分比
+        if (hashM) {
+          const ci = parseInt(hashM[1], 10) - 1; // 1-based → 0-based
+          if (total > 0 && ci >= 0 && ci < total) ch = ci;
+        } else {
+          const prog = await getProgress(essayId);
+          if (cancelled) return;
+          if (prog) {
+            if (total > 0 && typeof prog.chapter === 'number' && prog.chapter >= 0 && prog.chapter < total) ch = prog.chapter;
+            if (typeof prog.p === 'number') restoreP = prog.p;
           }
         }
+        chapterIdxRef.current = ch;
+        isRestoringRef.current = true;
+        setChapterIdx(ch);
+        // 双 rAF 等 React 提交并绘制新章节内容后再恢复滚动
+        pendingRestoreRef.current = restoreP;
+        requestAnimationFrame(() => requestAnimationFrame(restoreScroll));
       })
       .catch((err) => {
         if (!cancelled) {
@@ -103,7 +154,7 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
       });
 
     return () => { cancelled = true; };
-  }, [essayId, isLocked]);
+  }, [essayId, isLocked]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Attach click-to-zoom on article images
   useEffect(() => {
@@ -124,8 +175,9 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
     containerRef.current?.scrollTo(0, 0);
   }, [essayId]);
 
-  // Scroll to top when chapter changes
+  // Scroll to top when chapter changes (manual nav) — restore 期间跳过
   useEffect(() => {
+    if (isRestoringRef.current) return;
     containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [chapterIdx]);
 
@@ -158,7 +210,14 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
         setTopScrolled(st > 80);
         const dh = container.scrollHeight - container.clientHeight;
         setShowBackTop(st > 400 && st < dh - 40);
-        setReadingProgress(dh > 0 ? Math.min((st / dh) * 100, 100) : 0);
+        const ratio = dh > 0 ? Math.min((st / dh) * 100, 100) : 0;
+        setReadingProgress(ratio);
+        // 节流保存阅读进度（≥2s 一次）
+        const now = Date.now();
+        if (now - lastSaveRef.current >= 2000) {
+          lastSaveRef.current = now;
+          saveProgress(essayId, chapterIdxRef.current, ratio);
+        }
         ticking = false;
       });
     };
@@ -166,6 +225,25 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
     return () => {
       container.removeEventListener('scroll', onScroll);
       cancelAnimationFrame(raf);
+    };
+  }, [essayId]);
+
+  // 离开文章 / 页面隐藏时落盘最新进度
+  useEffect(() => {
+    const flush = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const dh = container.scrollHeight - container.clientHeight;
+      const ratio = dh > 0 ? Math.min((container.scrollTop / dh) * 100, 100) : 0;
+      saveProgress(essayId, chapterIdxRef.current, ratio);
+    };
+    const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', flush);
+      flush(); // 切换文章 / 卸载时保存
     };
   }, [essayId]);
 
@@ -356,6 +434,17 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
               </div>
             </div>
             <div className="rdTopR">
+              <button
+                className="rdCommentToggle"
+                onClick={() => setCommentsEnabled((v) => !v)}
+                title={commentsEnabled ? '关闭批注' : '查看批注'}
+                aria-label={commentsEnabled ? '关闭批注' : '查看批注'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                  {!commentsEnabled && <line x1="5" y1="19" x2="19" y2="5" />}
+                </svg>
+              </button>
               <div className="fontToggleWrap">
                 <button
                   ref={fontBtnRef}
@@ -396,6 +485,15 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
 
           <div className="rdMeta">
             <span className="rdDate">{essay.date} · {essay.category}{essay.author ? ` · ${essay.author}` : ''}{essay.time ? ` · ${essay.time}` : ''}</span>
+            {viewCount != null && !isLocked && (
+              <span className="rdViews">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                {formatCount(viewCount)} 次阅读
+              </span>
+            )}
             <div className="rdTags">
               {essay.tags.map((t) => (
                 <span key={t} className="rdTag">{t}</span>
@@ -462,6 +560,12 @@ export default function ReadingView({ essayId, onBack, essays, essayOrder, onUnl
                     ref={articleRef}
                     className={`article ${FONT_LEVELS[fontLevel].cls}`}
                     dangerouslySetInnerHTML={{ __html: displayContent }}
+                  />
+                  <ParagraphComments
+                    essayId={essayId}
+                    articleRef={articleRef}
+                    contentKey={`${essayId}:${chapterIdx}`}
+                    enabled={commentsEnabled}
                   />
                   {renderNav()}
                 </>

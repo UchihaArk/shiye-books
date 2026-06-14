@@ -44,5 +44,14 @@ export default defineConfig({
   ],
   server: {
     historyApiFallback: true,
+    // 仅代理动态 Pages-Functions 端点到本地 `wrangler pages dev`（npm run dev:server）。
+    // 静态 /api/index.json 与 /api/essay/*.json 不代理 —— 仍由上面的 serve-local-data
+    // 中间件从 dist/api 提供，保持前端 HMR 不受影响。
+    proxy: {
+      '/api/stats': { target: 'http://localhost:8788', changeOrigin: true },
+      '/api/progress': { target: 'http://localhost:8788', changeOrigin: true },
+      '/api/comments': { target: 'http://localhost:8788', changeOrigin: true },
+      '/api/meta': { target: 'http://localhost:8788', changeOrigin: true },
+    },
   },
 })
