@@ -4,4 +4,10 @@ cover: images/cover.jpg
 author: （英）毛姆
 tags: [短篇小说, 毛姆, 英国特工]
 time: 约 50 分钟
-summary: "申登主管一些在瑞士工作的间谍。当他首次被派往那儿时，R.希望他能了解一下他需要获得的报告类型，就给了他一扎用打字机打的文件参考，这些通信报告都来自特工处一位名叫古斯塔夫的情报员。 “他是我们这儿最好的情报员。”R.说，"
+images:
+  - images/traitor_lucerne_lake.jpg
+  - images/traitor_basel_apartment.jpg
+  - images/traitor_kaipel_dinner.jpg
+  - images/traitor_gustav_confrontation.jpg
+  - images/traitor_mrs_kaipel_despair.jpg
+summary: "申登主管一些在瑞士工作的间谍。当他首次被派往那儿时，R.希望他能了解一下他需要获得的报告类型，就给了他一扎用打字机打的文件参考，这些通信报告都来自特工处一位名叫古斯塔夫的情报员。他是我们这儿最好的情报员。R.说，"

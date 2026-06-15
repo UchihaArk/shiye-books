@@ -4,4 +4,9 @@ cover: images/cover.jpg
 author: （英）毛姆
 tags: [短篇小说, 毛姆, 英国特工]
 time: 约 46 分钟
+images:
+  - images/wartime-capital.jpg
+  - images/diplomatic-reception.jpg
+  - images/border-crossing.jpg
+  - images/hotel-intelligence.jpg
 summary: "阿申登被派往X城时，他环顾四周发现自己所处的情况十分微妙。X城是一个主要好战国的首都；但这个国家已经四分五裂；有一个很大的政党反对战争，革命即使不是迫在眉睫也是不可避免的。阿申登接到指令，前来看看在这种情形下该怎么做最好，他要拿出一个方案。"
