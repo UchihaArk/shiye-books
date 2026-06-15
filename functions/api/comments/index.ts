@@ -5,11 +5,12 @@ import type { Env, CommentOut } from '../../_lib/types';
 
 const MAX_CONTENT = 500;
 
-/** 取某文章的合法段落锚点集合（fetch 静态 essay JSON 的 pids 字段）。 */
-async function getEssayPids(request: Request, essay: string): Promise<Set<string> | null> {
+/** 取某文章的合法段落锚点集合（通过 ASSETS 绑定读静态 essay JSON 的 pids 字段，避免自 fetch 路由回环）。 */
+async function getEssayPids(env: Env, essay: string): Promise<Set<string> | null> {
   try {
-    const url = new URL(`/api/essay/${encodeURIComponent(essay)}.json`, request.url);
-    const r = await fetch(url.toString());
+    const r = await env.ASSETS.fetch(
+      new Request(`https://shiye.local/api/essay/${encodeURIComponent(essay)}.json`)
+    );
     if (!r.ok) return null;
     const data = (await r.json()) as { pids?: string[] };
     return Array.isArray(data.pids) ? new Set(data.pids) : null;
@@ -78,7 +79,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (content.length > MAX_CONTENT) return jsonError(400, `内容过长（≤${MAX_CONTENT}字）`);
 
   // 校验段落属于该文章（防随意挂载）
-  const pids = await getEssayPids(request, essay);
+  const pids = await getEssayPids(env, essay);
   if (!pids || !pids.has(paragraphId)) return jsonError(400, '无效段落');
 
   const row = await env.DB.prepare(
