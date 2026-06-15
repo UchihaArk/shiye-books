@@ -1,8 +1,12 @@
 name = "shiye-books"
 compatibility_date = "2026-06-07"
 
+# Worker 入口：路由 /api/* 并托管静态资源（保持 wrangler deploy 部署方式）
+main = "worker/index.ts"
+
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
 
 # ── D1（复用账户现有库 shiye）── 阅读量计数 + 片段书评
