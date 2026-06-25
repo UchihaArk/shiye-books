@@ -11,3 +11,5 @@ summary: >-
   从母乳喂养、日常护理、睡眠管理到异常情况处理，一份覆盖新生儿照护方方面面的实战手册。侧重实操步骤与图解，
   包含正确衔乳姿势、拍嗝手法、安全睡眠、脐带护理、黄疸监测、洗澡步骤、换尿布流程，以及明确的红线禁止事项与必做清单。
 time: 约40分钟
+cover: images/cover.jpg
+images: [chapters/00-母乳喂养/images/00a.jpg, chapters/00-母乳喂养/images/00b.jpg, chapters/00-母乳喂养/images/00c.jpg, chapters/00-母乳喂养/images/00d.jpg, chapters/01-日常护理/images/01a.jpg, chapters/01-日常护理/images/01b.jpg, chapters/01-日常护理/images/01c.jpg, chapters/02-睡眠管理/images/02a.jpg, chapters/02-睡眠管理/images/02b.jpg, chapters/02-睡眠管理/images/02c.jpg, chapters/03-异常情况/images/03a.jpg, chapters/03-异常情况/images/03b.jpg, chapters/03-异常情况/images/03c.jpg, chapters/04-脐带与黄疸/images/04a.jpg, chapters/04-脐带与黄疸/images/04b.jpg, chapters/05-洗澡与皮肤/images/05a.jpg, chapters/05-洗澡与皮肤/images/05b.jpg, chapters/05-洗澡与皮肤/images/05c.jpg, chapters/06-换尿布与臀部/images/06a.jpg, chapters/06-换尿布与臀部/images/06b.jpg, chapters/06-换尿布与臀部/images/06c.jpg, chapters/07-禁止与必做/images/07a.jpg, chapters/07-禁止与必做/images/07b.jpg]
